@@ -34,6 +34,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkOpenVRRenderWindow.h>
 #include <vtkOpenVRRenderWindowInteractor.h>
+#include <vtkOpenVRModel.h>
 
 #pragma once
 class vrep_controlled_object

@@ -7,15 +7,14 @@
 #include <sstream>
 #include <iterator>
 #include <fstream>
-#include <vtkOpenVRModel.h>
 
 #include <vtkOpenVRInteractorStyle.h>
+#include <vtkOpenVRModel.h>
+
 #include <thread>
 #include <chrono>
-#include <vtkOpenVRModel.h>
-#include <vtkSkybox.h>
-#include <vtkOpenVRPanelRepresentation.h>
-#include <vtkOpenVRPanelWidget.h>
+
+
 
 class eventCatcher : public vtkOpenVRInteractorStyle
 {
@@ -53,7 +52,6 @@ public:
 				grid->toggleMode();
 			}
 		}
-
 		simxSetIntegerSignal(clientID, signalName.c_str(), mode, simx_opmode_oneshot);
 		vtkOpenVRInteractorStyle::OnButton3D(edata);
 	}
@@ -98,7 +96,7 @@ void vr_renderwindow_support::updateRender() {
 void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	vrepScene = vrepSceneIn;
 
-	//vrepScene->vrep_get_object_pose();
+	vrepScene->vrep_get_object_pose();
 	for (int i = 0; i < vrepScene->getNumActors(); i++) {
 		vrepScene->getActor(i)->PickableOff();
 		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
@@ -111,16 +109,10 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 
 	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
 		renderer->AddActor(vrepScene->getPanelActor(i));
-		if (screenCamInUse) {
-			//screenCam->getRenderer()->AddActor(vrepScene->getPanelActor(i));
-		}
 	}
 
 	if (vrepScene->isVolumePresent()) {
 		renderer->AddViewProp(vrepScene->getVolume());
-		if (screenCamInUse) {
-			//screenCam->getRenderer()->AddViewProp(vrepScene->getVolume());
-		}
 		grid = vrepScene->vol;
 		//renderer->ResetCamera();
 	}
@@ -134,11 +126,9 @@ void vr_renderwindow_support::updatePose() {
 }
 
 void vr_renderwindow_support::syncData(vtkSmartPointer<vtkOpenVRRenderWindowInteractor> iren, vtkSmartPointer<vtkOpenVRRenderWindow> win, vtkSmartPointer<vtkOpenVRRenderer> ren) {
-	//vrepScene->transferVisionSensorData(iren, win, ren);
-	vrepScene->transferVisionSensorData();
+	vrepScene->transferVisionSensorData(iren, win, ren);
+	//vrepScene->transferVisionSensorData();
 }
-
-
 
 void vr_renderwindow_support::visionSensorThread() {
 	vrepScene->activateNewConnection(); // connect to vrep with a new port
@@ -149,6 +139,7 @@ void vr_renderwindow_support::visionSensorThread() {
 			screenCam->updateRender();
 		}
 		dataReady = true;
+		path->update();
 		//cout << "vision" << endl;
 		while (dataReady) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(3));
@@ -160,7 +151,7 @@ void vr_renderwindow_support::discoverDevices() {
 	controller1_vrep = new vrep_controlled_object(clientID, -1);
 	controller2_vrep = new vrep_controlled_object(clientID, -1);
 	headset_vrep = new vrep_controlled_object(clientID, -1);
-
+	
 	headset_vrep->setName("Headset");
 	headset_vrep->setDevice(vtkEventDataDevice::HeadMountedDisplay);		
 
@@ -185,61 +176,108 @@ void vr_renderwindow_support::synchronizeDevices() {
 	controller2_vrep->updatePosition(renderWindow, vr_renderWindowInteractor);
 }
 
+void vr_renderwindow_support::updateText() {
+	double pos[3];
+	double wxyz[4];
+	double ppos[3];
+	double wdir[3];
+	Tt->PostMultiply();
+	Tt->Identity();
+	Tt->RotateX(-90);
+	Tt->Translate(-0.17*scale, 0 , 0.05*scale);
+	txtActor->SetScale(0.01*scale);
+	vr::TrackedDevicePose_t& vrPose = renderWindow->GetTrackedDevicePose(renderWindow->GetTrackedDeviceIndexForDevice(vtkEventDataDevice::LeftController));
+	vr_renderWindowInteractor->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
+	Tt->RotateWXYZ(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
+	
+	Tt->Translate(pos);
+	Tt->Modified();
+	if (textUpdateCounter < 30) {
+		textUpdateCounter++;
+		return;
+	}
+	char * tab2 = new char[chrono->getText().length() + 1];
+	strcpy(tab2, chrono->getText().c_str());
+	vecText->SetText(tab2);
+	vecText->Modified();
+	textUpdateCounter = 0;
+}
+
 void vr_renderwindow_support::activate_interactor() {
 	vrepScene->vrep_get_object_pose();
+
+	// Classical vtk pipeline to set up renderwindow etc with extra options
 	renderer->SetActiveCamera(vr_camera);
 	renderer->UseFXAAOn();
 	renderer->SetBackground(1.0, 1.0, 1.0);
 	renderer->AutomaticLightCreationOn();
+	renderer->SetAutomaticLightCreation(true);
+	renderer->LightFollowCameraOn();
+	renderer->UseShadowsOff();
+	renderer->Modified();
 
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetMultiSamples(0);
+	renderWindow->SetDesiredUpdateRate(90.0);
+	//renderWindow->SetTrackHMD(true);
+	renderWindow->Initialize();
+
 	vr_renderWindowInteractor->SetRenderWindow(renderWindow);
-	renderer->SetAutomaticLightCreation(true);
-	renderer->LightFollowCameraOn();
-	
-	if (screenCamInUse) {
-		screenCam->getRenderer()->AutomaticLightCreationOn();
-		screenCam->getRenderer()->LightFollowCameraOn();
-		screenCam->getRenderer()->Modified();
-		screenCam->activateBasic();
-		renderer->RemoveAllViewProps();
-	}
+	vr_renderWindowInteractor->Initialize();
+
+	// Set up callback to capture interaction
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
 	if (grid != nullptr) {
 		events->grid = grid;
 	}
 	vr_renderWindowInteractor->SetInteractorStyle(events); // set object which captures buttonpress
-	renderer->UseShadowsOff();
-	renderer->Modified();
-	renderWindow->SetDesiredUpdateRate(90.0);
-
 	cout << "Everithing loaded succesfully" << endl;
-	renderWindow->Initialize();
-	vr_renderWindowInteractor->Initialize();
-	renderWindow->Render();
-	vr_renderWindowInteractor->Enable();
-	vr_renderWindowInteractor->Render();
-
+	
+	// controllers
 	discoverDevices();
+	synchronizeDevices();
+
+	// add text to
+	
+	vecText->SetText("vtkVectorText");
+	extrude->SetInputConnection(vecText->GetOutputPort());
+	extrude->SetExtrusionTypeToNormalExtrusion();
+	extrude->SetVector(0, 0, 0.5);
+	extrude->SetScaleFactor(1);
+	txtMapper->SetInputConnection(extrude->GetOutputPort());
+	txtActor->SetMapper(txtMapper);
+	txtActor->SetScale(0.01);
+	txtActor->GetProperty()->SetColor(0.53, 0.02, 0.02);
+	txtActor->SetUserTransform(Tt);
+	renderer->AddActor(txtActor);
+
+	// Search for dynamic path object
+	//path = new pathObject(clientID);
+	//renderer->AddActor(path->getActor());
+	//renderer->Modified();
+
+	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
 	if (vrepScene->startVisionSensorThread()) {
 		camThread = std::thread(handleFunc, this);
 	}else{
 		camThread.~thread();
 	}
-	
+
 	while (true) {
 		updatePose();
-		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 		synchronizeDevices();
+		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 		chrono->increment();
+		//updateText();
 		if (isReady()) {
 			syncData(vr_renderWindowInteractor, renderWindow, renderer);
 			//grid->updatMap();
 			chrono->increment2();
 			chrono->increment();
+			scale = (float)vr_renderWindowInteractor->GetPhysicalScale();
+			
 			setNotReady();
 		}
 		if (simxGetLastCmdTime(clientID) <= 0) {

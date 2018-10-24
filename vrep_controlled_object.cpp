@@ -52,16 +52,15 @@ void vrep_controlled_object::setName(std::string n) {
 }
 
 void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindow> rw, vtkSmartPointer<vtkOpenVRRenderWindowInteractor> rwi) {
-	if (rw->GetTrackedDeviceModel(device) == nullptr) { return; }
+	if (rw->GetTrackedDeviceModel(device) == nullptr) {  return; }
 	vtkSmartPointer<vtkTransform> Tt = vtkSmartPointer<vtkTransform>::New();
 	double pos[3];
 	double wxyz[4];
 	double ppos[3];
 	double wdir[3];
 	Tt->PostMultiply();
-		vr::TrackedDevicePose_t& vrPose = rw->GetTrackedDevicePose(rw->GetTrackedDeviceIndexForDevice(device));
-		rwi->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
-	//cout << wxyz[0] << " " << wxyz[1] << " " << wxyz[2] << " " << pos[0] << " " << pos[1] << " " << pos[2] << endl;
+	vr::TrackedDevicePose_t& vrPose = rw->GetTrackedDevicePose(rw->GetTrackedDeviceIndexForDevice(device));
+	rwi->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
 	Tt->RotateWXYZ(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 	Tt->Translate(pos);
 
@@ -74,8 +73,6 @@ void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindo
 
 	Tt->RotateX(90);
 	Tt->GetPosition(pos2);
-	//Tt->Inverse();
-	//Tt->GetOrientation(orr);
 	vtkSmartPointer<vtkTransform> textra = vtkSmartPointer<vtkTransform>::New();
 	textra->Identity();
 	textra->PostMultiply();
@@ -84,7 +81,6 @@ void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindo
 	textra->Inverse();
 
 	textra->Concatenate(Tt);
-	//Tt->Concatenate(textra);
 	textra->GetOrientationWXYZ(orr);
 	double orrt[3];
 	for (int i = 1; i < 4; i++) {
@@ -98,7 +94,6 @@ void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindo
 	for (int i = 0; i < 3; i++) {
 		temp[i] = ea[i];
 	}
-	//temp[2] = -temp[2];// +PI;
 	simxSetObjectOrientation(clientID, objectHandle, refHandle, temp, simx_opmode_streaming);
 	simxSetObjectPosition(clientID, objectHandle, refHandle, pos2, simx_opmode_streaming);
 	//cout << pos[0] << " " << pos[1] << " " << pos[2] << " " << orr[0] << " " << orr[1] << " " << orr[2] << endl;
