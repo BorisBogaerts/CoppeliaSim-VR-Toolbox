@@ -127,6 +127,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 	renderWindow->SetDesiredUpdateRate(500.0);
 	filter->SetInput(renderWindow);
 	texture->SetInputData(image);
+	//texture->SetInputConnection(filter->GetOutputPort());
 	panel->SetTexture(texture);
 	panel->Modified();
 

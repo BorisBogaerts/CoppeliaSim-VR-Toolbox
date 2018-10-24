@@ -49,7 +49,7 @@ public:
 
 		if ((controller == vtkEventDataDevice::LeftController) && (button == vtkEventDataDeviceInput::TrackPad)&& (action == vtkEventDataAction::Release)) {
 			if (grid != nullptr){
-				cout << endl << "Collormap toggle" << endl;
+				//cout << endl << "Collormap toggle" << endl;
 				grid->toggleMode();
 			}
 		}
@@ -127,8 +127,8 @@ void vr_renderwindow_support::updatePose() {
 }
 
 void vr_renderwindow_support::syncData(vtkSmartPointer<vtkOpenVRRenderWindowInteractor> iren, vtkSmartPointer<vtkOpenVRRenderWindow> win, vtkSmartPointer<vtkOpenVRRenderer> ren) {
-	vrepScene->transferVisionSensorData(iren, win, ren);
-	//vrepScene->transferVisionSensorData();
+	//vrepScene->transferVisionSensorData(iren, win, ren);
+	vrepScene->transferVisionSensorData();
 }
 
 void vr_renderwindow_support::visionSensorThread() {
@@ -187,7 +187,8 @@ void vr_renderwindow_support::updateText() {
 	Tt->RotateX(-90);
 	Tt->Translate(-0.17*scale, 0 , 0.05*scale);
 	txtActor->SetScale(0.01*scale);
-	vr::TrackedDevicePose_t& vrPose = renderWindow->GetTrackedDevicePose(renderWindow->GetTrackedDeviceIndexForDevice(vtkEventDataDevice::LeftController));
+	if (renderWindow->GetTrackedDeviceModel(vtkEventDataDevice::LeftController) == nullptr) { return; } // if no controller leave
+	vr::TrackedDevicePose_t& vrPose = renderWindow->GetTrackedDevicePose(renderWindow->GetTrackedDeviceIndexForDevice(vtkEventDataDevice::LeftController)); // this was the problem
 	vr_renderWindowInteractor->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
 	Tt->RotateWXYZ(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 	
@@ -230,6 +231,7 @@ void vr_renderwindow_support::activate_interactor() {
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
 	if ((grid != nullptr) & (vrepScene->isVolumePresent())){
+		cout << "Volume detected and connected" << endl;
 		events->grid = grid;
 	}
 	vr_renderWindowInteractor->SetInteractorStyle(events); // set object which captures buttonpress
@@ -265,20 +267,19 @@ void vr_renderwindow_support::activate_interactor() {
 	}else{
 		camThread.~thread();
 	}
-
+	
 	while (true) {
 		updatePose();
 		synchronizeDevices();
 		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 		chrono->increment();
 		updateText();
+		scale = (float)vr_renderWindowInteractor->GetPhysicalScale();
 		if (isReady()) {
 			syncData(vr_renderWindowInteractor, renderWindow, renderer);
 			//grid->updatMap();
 			chrono->increment2();
 			chrono->increment();
-			scale = (float)vr_renderWindowInteractor->GetPhysicalScale();
-			
 			setNotReady();
 		}
 		if (simxGetLastCmdTime(clientID) <= 0) {
