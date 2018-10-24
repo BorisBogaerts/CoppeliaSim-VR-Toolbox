@@ -48,7 +48,8 @@ public:
 		}
 
 		if ((controller == vtkEventDataDevice::LeftController) && (button == vtkEventDataDeviceInput::TrackPad)&& (action == vtkEventDataAction::Release)) {
-			if (grid != nullptr) {
+			if (grid != nullptr){
+				cout << endl << "Collormap toggle" << endl;
 				grid->toggleMode();
 			}
 		}
@@ -228,7 +229,7 @@ void vr_renderwindow_support::activate_interactor() {
 	// Set up callback to capture interaction
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
-	if (grid != nullptr) {
+	if ((grid != nullptr) & (vrepScene->isVolumePresent())){
 		events->grid = grid;
 	}
 	vr_renderWindowInteractor->SetInteractorStyle(events); // set object which captures buttonpress
@@ -253,9 +254,9 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->AddActor(txtActor);
 
 	// Search for dynamic path object
-	//path = new pathObject(clientID);
-	//renderer->AddActor(path->getActor());
-	//renderer->Modified();
+	path = new pathObject(clientID);
+	renderer->AddActor(path->getActor());
+	renderer->Modified();
 
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
@@ -270,7 +271,7 @@ void vr_renderwindow_support::activate_interactor() {
 		synchronizeDevices();
 		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 		chrono->increment();
-		//updateText();
+		updateText();
 		if (isReady()) {
 			syncData(vr_renderWindowInteractor, renderWindow, renderer);
 			//grid->updatMap();
