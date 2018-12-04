@@ -1,3 +1,33 @@
+// Copyright (c) 2018, Boris Bogaerts
+// All rights reserved.
+
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions 
+// are met:
+
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+
+// 3. Neither the name of the copyright holder nor the names of its 
+// contributors may be used to endorse or promote products derived from 
+// this software without specific prior written permission.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+// HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #include "vr_renderwindow_support.h"
 #include <vector>
 #include "extApi.h"
@@ -40,6 +70,14 @@ public:
 			signalName.append("Trigger");
 		}
 
+		else if (button == vtkEventDataDeviceInput::Grip) {
+			signalName.append("Grip");
+		}
+		else if (button == vtkEventDataDeviceInput::TrackPad) {
+			trackpad = true;
+			signalName.append("TrackPad");
+		}
+
 		if (action == vtkEventDataAction::Press) {
 			mode = 1;
 		}
@@ -54,10 +92,13 @@ public:
 			}
 		}
 		simxSetIntegerSignal(clientID, signalName.c_str(), mode, simx_opmode_oneshot);
-		vtkOpenVRInteractorStyle::OnButton3D(edata);
+		if (useVTKinteractor) {
+			vtkOpenVRInteractorStyle::OnButton3D(edata);
+		}
 	}
 	int clientID;
 	vrep_volume_grid *grid;
+	bool useVTKinteractor = true;
 protected:
 };
 
@@ -66,9 +107,10 @@ void handleFunc(vr_renderwindow_support *sup) {
 	sup->visionSensorThread();
 }
 
-vr_renderwindow_support::vr_renderwindow_support(int cid) 
+vr_renderwindow_support::vr_renderwindow_support(int cid, int ref, int interactor)
 { 
-	clientID = cid; 
+	refH = ref;
+	setClientID(cid, interactor);
 	chrono->coverage = &coverage; 
 	chrono->scale = &scale; 
 	// Now add spectator camera
@@ -77,17 +119,13 @@ vr_renderwindow_support::vr_renderwindow_support(int cid)
 	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"checkForCam"
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 	if (data[0] != 0) {
-		screenCam = new vrep_vision_sensor;
-		screenCam->setClientID(clientID);
-		float cameraParameters[] = { data[1], data[2], data[3], data[4], data[5] };
-		screenCam->setCameraParams(data[0], cameraParameters);
-		screenCamInUse = true;
-		cout << "Detected screen capture camera (seriously decreases performance)" << endl;
+
 	}
 }
 
 vr_renderwindow_support::~vr_renderwindow_support()
 {
+
 }
 
 void vr_renderwindow_support::updateRender() {
@@ -103,15 +141,10 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
 		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
 		renderer->AddActor(vrepScene->getActor(i));
-		if (screenCamInUse) {
-			screenCam->getRenderer()->AddActor(vrepScene->getActor(i));
-		}
 	}
-
 	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
 		renderer->AddActor(vrepScene->getPanelActor(i));
 	}
-
 	if (vrepScene->isVolumePresent()) {
 		renderer->AddViewProp(vrepScene->getVolume());
 		grid = vrepScene->vol;
@@ -136,22 +169,19 @@ void vr_renderwindow_support::visionSensorThread() {
 	while (true) {
 		vrepScene->updateVisionSensorObjectPose();
 		coverage = vrepScene->updateVisionSensorRender();
-		if (screenCamInUse) {
-			screenCam->updateRender();
-		}
 		dataReady = true;
-		path->update();
+		//path->update();
 		//cout << "vision" << endl;
 		while (dataReady) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		};
 	}
 }
 
 void vr_renderwindow_support::discoverDevices() {
-	controller1_vrep = new vrep_controlled_object(clientID, -1);
-	controller2_vrep = new vrep_controlled_object(clientID, -1);
-	headset_vrep = new vrep_controlled_object(clientID, -1);
+	controller1_vrep = new vrep_controlled_object(clientID, refH);
+	controller2_vrep = new vrep_controlled_object(clientID, refH);
+	headset_vrep = new vrep_controlled_object(clientID, refH);
 	
 	headset_vrep->setName("Headset");
 	headset_vrep->setDevice(vtkEventDataDevice::HeadMountedDisplay);		
@@ -207,7 +237,6 @@ void vr_renderwindow_support::updateText() {
 
 void vr_renderwindow_support::activate_interactor() {
 	vrepScene->vrep_get_object_pose();
-
 	// Classical vtk pipeline to set up renderwindow etc with extra options
 	renderer->SetActiveCamera(vr_camera);
 	renderer->UseFXAAOn();
@@ -230,6 +259,7 @@ void vr_renderwindow_support::activate_interactor() {
 	// Set up callback to capture interaction
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
+	events->useVTKinteractor = useInteractor;
 	if ((grid != nullptr) & (vrepScene->isVolumePresent())){
 		cout << "Volume detected and connected" << endl;
 		events->grid = grid;
@@ -256,9 +286,9 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->AddActor(txtActor);
 
 	// Search for dynamic path object
-	path = new pathObject(clientID);
-	renderer->AddActor(path->getActor());
-	renderer->Modified();
+	//path = new pathObject(clientID);
+	//renderer->AddActor(path->getActor());
+	//renderer->Modified();
 
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
@@ -271,10 +301,15 @@ void vr_renderwindow_support::activate_interactor() {
 	while (true) {
 		updatePose();
 		synchronizeDevices();
-		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
+		
 		chrono->increment();
-		updateText();
 		scale = (float)vr_renderWindowInteractor->GetPhysicalScale();
+	
+		if (!useInteractor) {
+			vr_renderWindowInteractor->SetPhysicalScale(1);
+		}
+		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
+		updateText();
 		if (isReady()) {
 			syncData(vr_renderWindowInteractor, renderWindow, renderer);
 			//grid->updatMap();
@@ -282,6 +317,7 @@ void vr_renderwindow_support::activate_interactor() {
 			chrono->increment();
 			setNotReady();
 		}
+		
 		if (simxGetLastCmdTime(clientID) <= 0) {
 			vr_renderWindowInteractor->TerminateApp(); // stop if the v-rep simulation is not running
 			camThread.~thread();

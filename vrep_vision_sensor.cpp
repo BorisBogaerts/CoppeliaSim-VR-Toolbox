@@ -1,3 +1,33 @@
+// Copyright (c) 2018, Boris Bogaerts
+// All rights reserved.
+
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions 
+// are met:
+
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+
+// 3. Neither the name of the copyright holder nor the names of its 
+// contributors may be used to endorse or promote products derived from 
+// this software without specific prior written permission.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+// HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #include "vrep_vision_sensor.h"
 #include <vector>
 #include "extApi.h"
@@ -6,7 +36,7 @@
 #include <sstream>
 #include <iterator>
 #include <fstream>
-
+#include <vtkMutexLock.h>
 void vrep_vision_sensor::updatePosition() {
 	this->updatePose();
 	invPose->DeepCopy(pose);
@@ -19,8 +49,8 @@ void vrep_vision_sensor::updatePose() {
 	simxFloat eulerAngles[3];
 	simxFloat position[3];
 
-	simxGetObjectOrientation(clientID, handle, -1, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
-	simxGetObjectPosition(clientID, handle, -1, position, simx_opmode_streaming);
+	simxGetObjectOrientation(clientID, handle, refH, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
+	simxGetObjectPosition(clientID, handle, refH, position, simx_opmode_streaming);
 	pose->PostMultiply();
 	pose->Identity();
 	pose->RotateZ((eulerAngles[2] * 180 / 3.1415));
@@ -83,13 +113,18 @@ void vrep_vision_sensor::updateRender() {
 	}
 	else {
 		renderWindow->Render();
+		//texture->Render(renderer);
 		filter->Modified();
 		filter->ReadFrontBufferOff();
 		filter->Update();
+		//resize->SetOutputDimensions(100,100,1);
+		//resize->Update();
+		//image->ShallowCopy(filter->GetOutput());
 	}
 };
 
 void vrep_vision_sensor::transferImageTexture() {
+	//image->Modified();
 	image->ShallowCopy(filter->GetOutput());
 	image->Modified();
 }
@@ -126,13 +161,13 @@ void vrep_vision_sensor::activate(double scale[]) {
 	renderWindow->OffScreenRenderingOn();
 	renderWindow->SetDesiredUpdateRate(500.0);
 	filter->SetInput(renderWindow);
-	texture->SetInputData(image);
-	//texture->SetInputConnection(filter->GetOutputPort());
-	panel->SetTexture(texture);
+	//resize->SetInputConnection(filter->GetOutputPort()); // extra
+	//texture->SetInputData(image);
+	texture->SetInputConnection(filter->GetOutputPort());
+	texture2->SetInputData(image);
+	panel->SetTexture(texture2);
 	panel->Modified();
 
-	camAct->SetCamera(vr_camera);
-	camAct->PickableOff();
 }
 
 void vrep_vision_sensor::activateBasic() {
@@ -147,10 +182,3 @@ void vrep_vision_sensor::activateBasic() {
 	renderWindow->Render();
 	//vr_renderWindowInteractor->Render();
 }
-//vr_camera->SetPosition(pose->GetPosition());
-
-//vr_camera->SetFocalPoint(pose->GetMatrix()->GetElement(0, 3) - (focalLength * pose->GetMatrix()->GetElement(0, 2)),
-//	pose->GetMatrix()->GetElement(1, 3) - (focalLength * pose->GetMatrix()->GetElement(1, 2)),
-//	pose->GetMatrix()->GetElement(2, 3) - (focalLength * pose->GetMatrix()->GetElement(2, 2)));
-
-//vr_camera->SetViewUp(pose->GetMatrix()->GetElement(0, 1), pose->GetMatrix()->GetElement(1, 1), pose->GetMatrix()->GetElement(2, 1));

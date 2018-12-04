@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Boris Bogaerts
+// Copyright (c) 2018, Boris Bogaerts
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without 
@@ -90,7 +90,7 @@ void vrep_scene_content::activateNewConnection() {
 	int clientID2 = simxStart((simxChar*)"127.0.0.1", 19998, true, true, 10000, 5);
 	cout << "Connection opened on port 19998 (second thread)" << endl;
 	for (int i = 0; i < vrepMeshContainer2.size(); i++) {
-		vrepMeshContainer2[i].setClientID(clientID2, -1); // second core uses a new connection
+		vrepMeshContainer2[i].setClientID(clientID2, refHandle); // second core uses a new connection
 	}
 }
 
@@ -130,7 +130,7 @@ void vrep_scene_content::loadCams() {
 
 		for (int i = 0; i < dataLength; i = i + 10) {
 			vrep_vision_sensor temp = vrep_vision_sensor();
-			temp.setClientID(clientID);
+			temp.setClientID(clientID, refHandle);
 			camsContainer.push_back(temp);
 			float cameraParameters[] = { data[i+3], data[i + 4], data[i + 5], data[i + 6], data[i + 7] };
 			camsContainer[camsContainer.size() - 1].setCameraParams(data[i], cameraParameters);
@@ -182,10 +182,6 @@ vtkActor* vrep_scene_content::getActor2(int i) {
 	return vrepMeshContainer2[i].getActor();
 }
 
-vtkSmartPointer<vtkCameraActor> vrep_scene_content::getCameraActor(int i) {
-	return camsContainer[i].getCameraActor();
-}
-
 int vrep_scene_content::getNumActors() {
 	return vrepMeshContainer.size();
 }
@@ -227,9 +223,12 @@ void vrep_scene_content::transferVisionSensorData(vtkSmartPointer<vtkOpenVRRende
 }
 
 void vrep_scene_content::transferVisionSensorData() {
-#pragma loop(hint_parallel(4))  
-	for (int i = 0; i < camsContainer.size(); i++) {
-		camsContainer[i].transferImageTexture();
+#pragma loop(hint_parallel(6))  
+	for (int i = 0; i < camsContainer.size()+1; i++) {
+		if (i < camsContainer.size()) {
+			camsContainer[i].transferImageTexture();
+		}
+		
 	}
 	bool update = vol->updatePosition(scalar);
 }

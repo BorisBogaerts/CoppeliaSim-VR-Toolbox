@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Boris Bogaerts
+// Copyright (c) 2018, Boris Bogaerts
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without 
@@ -87,7 +87,7 @@ void vrep_mesh_object::makeActor() {
 			vtkSmartPointer<vtkPNGReader> io = vtkSmartPointer<vtkPNGReader>::New();
 			io->SetFileName(textureName.c_str());
 			texture->SetInputConnection(io->GetOutputPort());
-			texture->MipmapOn();
+			//texture->MipmapOn();
 			texture->InterpolateOn();
 			texture->Update();
 			vtkSmartPointer<vtkFloatArray> tccoords = vtkSmartPointer<vtkFloatArray>::New();

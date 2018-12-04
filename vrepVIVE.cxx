@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Boris Bogaerts
+// Copyright (c) 2018, Boris Bogaerts
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without 
@@ -48,36 +48,51 @@ int main()
 	int portNb = 19997;
 	int clientID = -1;
 	int clientID2 = -1;
-	int time = 0; 
-		// Try to connect to V-REP
-		
-		std::cout << vtkVersion::GetVTKSourceVersion() << std::endl;
-		cout << endl << "Trying to connect with V-REP ..." << endl;
-		while (clientID == -1) {
-			Sleep(100);
-			clientID = simxStart((simxChar*)"127.0.0.1", portNb, true, true, -200000, 5);
-		}
+	int running = 0;
+	// Try to connect to V-REP
 
-		cout << endl << "Connected to V-REP, clientID number : " << clientID << endl;
-		cout << "Connected to V-REP port number : " << portNb  << endl << endl;
-		
+	std::cout << vtkVersion::GetVTKSourceVersion() << std::endl;
+	cout << endl << "Trying to connect with V-REP ..." << endl;
+	while (clientID == -1) {
+		Sleep(100);
+		clientID = simxStart((simxChar*)"127.0.0.1", portNb, true, true, -200000, 5);
+	}
+
+	cout << endl << "Connected to V-REP, clientID number : " << clientID << endl;
+	cout << "Connected to V-REP port number : " << portNb << endl << endl;
+
+	simxInt *data;
+	simxInt dataLength;
+	simxInt result;
+	int interactor;
+	while (true) {
 		// Wait until simulation gets activated
 		cout << "Wait for simulation start ..." << endl;
-		int temp;
-		while (time == 0) {	
-			temp = simxAddStatusbarMessage(clientID, (simxChar*)"Start simulation to proceed", simx_opmode_oneshot); // update time
-			Sleep(500);
-			time = simxGetLastCmdTime(clientID);
+
+		// Now add spectator camera
+		result = 8;
+		while ((result==8) || (running == 0)) {
+			result = simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"isRunning"
+				, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+			if (result != 8) {
+				running = data[0];
+				interactor = data[1];
+			}
 		}
 		cout << "Simulation started" << endl << endl;
-	
-		vrep_scene_content *scene = new vrep_scene_content(clientID, -1); // all geometry is relative to refference frame
+		int refHandle;
+		simxGetObjectHandle(clientID, (simxChar*)"HTC_VIVE", &refHandle, simx_opmode_blocking);
+		vrep_scene_content *scene = new vrep_scene_content(clientID, refHandle); // all geometry is relative to refference frame
 		scene->loadVolume();
 		scene->loadScene(true); // read scene from VREP
 		scene->loadCams();
 		scene->connectCamsToVolume();
-		vr_renderwindow_support *supp = new vr_renderwindow_support(clientID);
+		vr_renderwindow_support *supp = new vr_renderwindow_support(clientID, refHandle, interactor);
 		supp->addVrepScene(scene);
-		supp->activate_interactor(); 
+		supp->activate_interactor();
+		delete supp;
+		delete scene;
+		Sleep(500);
+	}
 	return EXIT_SUCCESS;
 }

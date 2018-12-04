@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Boris Bogaerts
+// Copyright (c) 2018, Boris Bogaerts
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without 
@@ -49,6 +49,8 @@
 #include <vtkOpenVRRenderWindowInteractor.h>
 #include <vtkOpenVRRenderWindow.h>
 #include <vtkOpenVRRenderer.h>
+#include <vtkOpenVRCamera.h>
+
 //#include <LuaBridge.h>
 //extern "C" {
 //# include "lua.h"
@@ -78,7 +80,6 @@ public:
 	bool isVolumePresent() { return volumePresent; };
 	void loadCams();
 	void connectCamsToVolume();
-	vtkSmartPointer<vtkCameraActor> getCameraActor(int i);
 	void activateNewConnection();
 	void updateMainCamObjectPose();
 	void updateVisionSensorObjectPose();
