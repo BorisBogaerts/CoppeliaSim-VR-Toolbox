@@ -87,6 +87,7 @@ int main()
 		scene->loadScene(true); // read scene from VREP
 		scene->loadCams();
 		scene->connectCamsToVolume();
+		scene->checkMeasurementObject(); // if the volume is replaced by a mesh then we need to change a few things
 		vr_renderwindow_support *supp = new vr_renderwindow_support(clientID, refHandle, interactor);
 		supp->addVrepScene(scene);
 		supp->activate_interactor();

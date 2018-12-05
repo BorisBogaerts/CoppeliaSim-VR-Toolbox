@@ -71,7 +71,7 @@ vtkSmartPointer<vtkActor> pathObject::getActor() {
 	lineMapper->SetInputData(polyData);
 	lineActor->SetMapper(lineMapper);
 	lineActor->GetProperty()->SetColor(0.7, 0.14, 0.56);
-	lineActor->GetProperty()->SetLineWidth(10.0);
+	lineActor->GetProperty()->SetLineWidth(5.0);
 	lineActor->PickableOff();
 	pose->Identity();
 	pose->RotateX(-90);
@@ -103,20 +103,9 @@ void pathObject::update() {
 				prevLength = signalLength;
 			}
 			else {
-				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float)); // for it somebody else changed the path, some optimizer maybe
+				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float)); // for if somebody else changed the path, some optimizer maybe?
 			}
 		}
 		return;
 	}
 }
-
-//for (int i = 0; i < points->GetNumberOfPoints(); i++) {
-//	cout << points->GetPoint(i)[0] << "     " << points->GetPoint(i)[1] << "     " << points->GetPoint(i)[2] << endl;
-//}
-
-//for (int i = 0; i < cells->GetNumberOfCells(); i++) {
-//	vtkSmartPointer<vtkIdList> ids = vtkSmartPointer<vtkIdList>::New();
-//	cells->GetCell(i, ids);
-//	cout << ids->GetNumberOfIds() << endl;
-//	cout << ids->GetId(0) << "    " << ids->GetId(1) << endl;
-//}

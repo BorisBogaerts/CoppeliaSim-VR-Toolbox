@@ -51,24 +51,25 @@ vrep_volume_grid::~vrep_volume_grid()
 }
 
 bool vrep_volume_grid::updatePosition(vtkSmartPointer<vtkFloatArray> values) {
-	bool update = this->updateGrid();
-	if (update) { return true; };
-	simxFloat eulerAngles[3];
-	simxFloat position[3];
-	simxGetObjectOrientation(clientID, objectHandle, refHandle, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
-	simxGetObjectPosition(clientID, objectHandle, refHandle, position, simx_opmode_streaming);
-	pose->PostMultiply();
-	pose->Identity();
+	if (alternativeHandle == -1) {
+		bool update = this->updateGrid();
+		if (update) { return true; };
+		simxFloat eulerAngles[3];
+		simxFloat position[3];
+		simxGetObjectOrientation(clientID, objectHandle, refHandle, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
+		simxGetObjectPosition(clientID, objectHandle, refHandle, position, simx_opmode_streaming);
+		pose->PostMultiply();
+		pose->Identity();
 
-	pose->RotateZ((eulerAngles[2] * 180 / 3.1415));
-	pose->RotateY((eulerAngles[1] * 180 / 3.1415));
-	pose->RotateX((eulerAngles[0] * 180 / 3.1415));
+		pose->RotateZ((eulerAngles[2] * 180 / 3.1415));
+		pose->RotateY((eulerAngles[1] * 180 / 3.1415));
+		pose->RotateX((eulerAngles[0] * 180 / 3.1415));
 
-	pose->Translate(position);
+		pose->Translate(position);
 
-	pose->RotateX(-90);
-	pose->Modified();
-
+		pose->RotateX(-90);
+		pose->Modified();
+	}
 	scalar->ShallowCopy(values);
 	scalar->Modified();
 	return false;

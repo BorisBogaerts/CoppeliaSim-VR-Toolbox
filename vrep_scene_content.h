@@ -79,6 +79,7 @@ public:
 	float computeScalarField();
 	bool isVolumePresent() { return volumePresent; };
 	void loadCams();
+	void checkMeasurementObject();
 	void connectCamsToVolume();
 	void activateNewConnection();
 	void updateMainCamObjectPose();
@@ -93,7 +94,7 @@ protected:
 	int refHandle;
 	bool volumePresent = false;
 	bool activeThread = false;
-
+	int numPoints;
 	vtkSmartPointer<vtkVolume> volume;
 	
 

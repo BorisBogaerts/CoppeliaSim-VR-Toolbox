@@ -36,7 +36,6 @@
 #include <sstream>
 #include <iterator>
 #include <fstream>
-#include <vtkMutexLock.h>
 void vrep_vision_sensor::updatePosition() {
 	this->updatePose();
 	invPose->DeepCopy(pose);
@@ -81,15 +80,15 @@ void vrep_vision_sensor::setPointData(vtkSmartPointer<vtkPoints> data, vtkSmartP
 	}
 	ptset->GetPointData()->AddArray(id);
 	ptsT->SetInputData(ptset);
-	this->updatePosition();
 	ptsT->SetTransform(pose);
 
-	selectVisiblePoints->SetTolerance(0);
+	selectVisiblePoints->SetTolerance(1e-4);
 	selectVisiblePoints->SelectionWindowOff();
 	selectVisiblePoints->SetInputConnection(ptsT->GetOutputPort());
 	selectVisiblePoints->SetRenderer(renderer);
 	selectVisiblePoints->Update();
 }
+
 
 void vrep_vision_sensor::setCameraParams(int h, float cameraParams[]) {
 	handle = h;

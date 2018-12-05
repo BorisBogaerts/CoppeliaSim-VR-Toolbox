@@ -87,7 +87,7 @@ void vrep_mesh_object::makeActor() {
 			vtkSmartPointer<vtkPNGReader> io = vtkSmartPointer<vtkPNGReader>::New();
 			io->SetFileName(textureName.c_str());
 			texture->SetInputConnection(io->GetOutputPort());
-			//texture->MipmapOn();
+			texture->MipmapOn();
 			texture->InterpolateOn();
 			texture->Update();
 			vtkSmartPointer<vtkFloatArray> tccoords = vtkSmartPointer<vtkFloatArray>::New();
@@ -129,49 +129,7 @@ void vrep_mesh_object::updatePosition() {
 		pose->Translate(position);
 
 		pose->RotateX(-90);
-		if (updateCounter < 11) { updateCounter++; };
-	//}
-	//else { // vtk position updates vtk position
-	//	cout << "Something wrong" << endl;
-	//	using ::Eigen::AngleAxisd;
-	//	using ::Eigen::Matrix3d;
-	//	using ::Eigen::Vector3d;
-	//	double orr[4];
-	//	float pos[3];
-	//	vtkSmartPointer<vtkTransform> Tt = vtkSmartPointer<vtkTransform>::New();
-	//	vrep_mesh_actor->GlobalWarningDisplayOff();
-	//	Tt->GetMatrix()->DeepCopy(vrep_mesh_actor->GetUserTransform()->GetMatrix());
-	//	Tt->PostMultiply();
-	//	Tt->RotateX(90);
-	//	Tt->GetPosition(pos);
-	//	//Tt->Inverse();
-	//	//Tt->GetOrientation(orr);
-	//	vtkSmartPointer<vtkTransform> textra = vtkSmartPointer<vtkTransform>::New();
-	//	textra->Identity();
-	//	textra->PostMultiply();
-	//	//textra->RotateX(-180);
-	//	//textra->RotateZ(-180);
-	//	textra->Inverse();
-
-	//	textra->Concatenate(Tt);
-	//	//Tt->Concatenate(textra);
-	//	textra->GetOrientationWXYZ(orr);
-	//	double orrt[3];
-	//	for (int i = 1; i < 4; i++) {
-	//		orrt[i - 1] = orr[i];
-	//	}
-	//	Matrix3d R;
-	//	AngleAxisd angleAxis(PI* orr[0] / 180, Vector3d(orrt));
-	//	R = AngleAxisd(angleAxis);
-	//	Vector3d ea = R.eulerAngles(0, 1, 2);
-	//	float temp[3];
-	//	for (int i = 0; i < 3; i++) {
-	//		temp[i] = ea[i];
-	//	}
-	//	simxSetObjectOrientation(clientID, vrep_mesh_handle, refHandle, temp, simx_opmode_streaming);
-	//	simxSetObjectPosition(clientID, vrep_mesh_handle, refHandle, pos, simx_opmode_streaming);
-	//}
-	
+		pose->Modified();
 };
 
 void vrep_mesh_object::getHandles() {

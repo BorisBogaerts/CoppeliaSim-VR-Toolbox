@@ -86,8 +86,8 @@ public:
 		}
 
 		if ((controller == vtkEventDataDevice::LeftController) && (button == vtkEventDataDeviceInput::TrackPad)&& (action == vtkEventDataAction::Release)) {
-			if (grid != nullptr){
-				//cout << endl << "Collormap toggle" << endl;
+			if ((grid != nullptr)){
+				cout << endl << "Collormap toggle" << endl;
 				grid->toggleMode();
 			}
 		}
@@ -97,7 +97,7 @@ public:
 		}
 	}
 	int clientID;
-	vrep_volume_grid *grid;
+	vrep_volume_grid *grid = nullptr;
 	bool useVTKinteractor = true;
 protected:
 };
@@ -159,7 +159,7 @@ void vr_renderwindow_support::updatePose() {
 	vrepScene->updateMainCamObjectPose();
 }
 
-void vr_renderwindow_support::syncData(vtkSmartPointer<vtkOpenVRRenderWindowInteractor> iren, vtkSmartPointer<vtkOpenVRRenderWindow> win, vtkSmartPointer<vtkOpenVRRenderer> ren) {
+void vr_renderwindow_support::syncData() {
 	//vrepScene->transferVisionSensorData(iren, win, ren);
 	vrepScene->transferVisionSensorData();
 }
@@ -238,6 +238,7 @@ void vr_renderwindow_support::activate_interactor() {
 	// Classical vtk pipeline to set up renderwindow etc with extra options
 	renderer->SetActiveCamera(vr_camera);
 	renderer->UseFXAAOn();
+	//renderer->UseFXAAOff();
 	renderer->SetBackground(1.0, 1.0, 1.0);
 	renderer->AutomaticLightCreationOn();
 	renderer->SetAutomaticLightCreation(true);
@@ -258,7 +259,7 @@ void vr_renderwindow_support::activate_interactor() {
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
 	events->useVTKinteractor = useInteractor;
-	if ((grid != nullptr) & (vrepScene->isVolumePresent())){
+	if ((grid != nullptr) && (vrepScene->isVolumePresent())){
 		cout << "Volume detected and connected" << endl;
 		events->grid = grid;
 	}
@@ -310,9 +311,10 @@ void vr_renderwindow_support::activate_interactor() {
 		updateText();
 		path->update();
 		if (isReady()) {
-			syncData(vr_renderWindowInteractor, renderWindow, renderer);
+			syncData();
 			//grid->updatMap();
 			chrono->increment2();
+			vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 			chrono->increment();
 			setNotReady();
 		}

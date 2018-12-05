@@ -64,7 +64,7 @@ public:
 	void setNotReady() { dataReady = false; };
 
 	
-	void syncData(vtkSmartPointer<vtkOpenVRRenderWindowInteractor> iren, vtkSmartPointer<vtkOpenVRRenderWindow> win, vtkSmartPointer<vtkOpenVRRenderer> ren);
+	void syncData();
 	void discoverDevices();
 	void synchronizeDevices();
 

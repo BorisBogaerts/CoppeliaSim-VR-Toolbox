@@ -207,14 +207,12 @@ float vrep_scene_content::updateVisionSensorRender() {
 	for (int i = 0; i < camsContainer.size(); i++) {
 		camsContainer[i].updateRender();
 	}
-	if (volumePresent) {
-		ret = this->computeScalarField();
-	}
+	ret = this->computeScalarField();
 	return ret;
 }
 
 void vrep_scene_content::transferVisionSensorData(vtkSmartPointer<vtkOpenVRRenderWindowInteractor> iren, vtkSmartPointer<vtkOpenVRRenderWindow> win, vtkSmartPointer<vtkOpenVRRenderer> ren) {
-#pragma loop(hint_parallel(4))  
+//pragma loop(hint_parallel(4))  
 	for (int i = 0; i < camsContainer.size(); i++) {
 		camsContainer[i].transferImageTexture();
 	}
@@ -224,7 +222,7 @@ void vrep_scene_content::transferVisionSensorData(vtkSmartPointer<vtkOpenVRRende
 
 void vrep_scene_content::transferVisionSensorData() {
 #pragma loop(hint_parallel(6))  
-	for (int i = 0; i < camsContainer.size()+1; i++) {
+	for (int i = 0; i < camsContainer.size(); i++) {
 		if (i < camsContainer.size()) {
 			camsContainer[i].transferImageTexture();
 		}
@@ -242,7 +240,13 @@ void vrep_scene_content::vrep_get_object_pose() {
 
 float vrep_scene_content::computeScalarField() {
 	scalar = vtkSmartPointer<vtkFloatArray>::New();
-	scalar->SetNumberOfValues(vol->getNumberOfValues());
+	if (volumePresent) {
+		scalar->SetNumberOfValues(vol->getNumberOfValues());
+	}
+	else {
+		scalar->SetNumberOfValues(numPoints);
+	}
+	
 	scalar->FillValue((float)0);
 	int count = 0;
 //#pragma loop(hint_parallel(4))  
@@ -250,8 +254,8 @@ float vrep_scene_content::computeScalarField() {
 			vtkSmartPointer<vtkPolyData> temp = camsContainer[i].checkVisibility();
 			for (int ii = 0; ii < temp->GetPointData()->GetArray(0)->GetNumberOfTuples(); ii++) {
 				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii);
-				int prevVal = scalar->GetValue(ID);
-				scalar->SetValue(ID, (float)(prevVal +1));
+				float prevVal = scalar->GetValue(ID);
+				scalar->SetValue(ID, prevVal +1);
 				if (prevVal == 0) {
 					count++;
 				}
@@ -268,21 +272,46 @@ void vrep_scene_content::connectCamsToVolume() {
 			activeThread = true;
 		}
 	}
-	else { // check if we can connect mesh
-		int altHandle;
-		altHandle = vol->getAltHandle();
-		cout << "Alt handle: " << altHandle << endl;
-		if (altHandle != 0) {
-			for (int i = 0; i < vrepMeshContainer.size(); i++) {
-				if (altHandle == vrepMeshContainer[i].getHandle()) {
-					for (int ii = 0; ii < camsContainer.size(); ii++) {
-						camsContainer[ii].setPointData(vrepMeshContainer[i].getMeshData()->GetPoints(), vrepMeshContainer[i].getPose()); 
-						activeThread = true;
-					}
-				}
+}
+
+void vrep_scene_content::checkMeasurementObject() {
+	if (volumePresent) { // volume is occupied by volume
+		return;
+	}
+	if (vol->getAltHandle() == -1) { // no alternative handle was returned so no child
+		return;
+	}
+	// An alternative mesh is provided, we should fix some stuff
+	cout << "OK switching from volume to inspection mesh with handle : " << vol->getAltHandle() << endl;
+	for (int i = 0; i < vrepMeshContainer.size(); i++) {
+		if (vol->getAltHandle() == vrepMeshContainer[i].getHandle()) { // This is the one
+			float color[] = { 1.0,1.0,1.0 }; // base color white
+			vrepMeshContainer[i].setColor(color);
+			vtkSmartPointer<vtkFloatArray> scalar = vol->getScalars(); // get the scalar field (contains quality per vertex)
+			vtkSmartPointer<vtkPolyData> meshData = vrepMeshContainer[i].getMeshData(); // get the mesh
+
+			// now itialize scalars
+			scalar->SetNumberOfComponents(1);
+			scalar->SetNumberOfValues(meshData->GetNumberOfPoints()); // one value for each vertex
+			numPoints = meshData->GetNumberOfPoints();
+			for (int ii = 1; ii < meshData->GetNumberOfPoints(); ii++) {
+				scalar->SetValue(ii, (float)rand() / (RAND_MAX)); // for debugging, let's give them a random color to start of
 			}
+			scalar->SetName("scalars");
+			meshData->GetPointData()->SetScalars(scalar); // add scalars to the mesh
+			meshData->GetPointData()->SetActiveScalars("scalars"); // make them "active"
+
+			// stupid change of data object switch
+			vtkSmartPointer<vtkPoints> vertices = vtkSmartPointer<vtkPoints>::New();
+			for (int ii = 0; ii < meshData->GetNumberOfPoints(); ii++) {
+				vertices->InsertPoint(ii, meshData->GetPoint(ii));
+			}
+			// Now connect the points to the vision sensor (these mesh points will be used in the visibility check)
+			for (int ii = 0; ii < camsContainer.size(); ii++) {
+				camsContainer[ii].setPointData(vertices, vrepMeshContainer[i].getPose());
+				activeThread = true;
+			}
+			//volumePresent = true;
 		}
 	}
-	
-	
 }

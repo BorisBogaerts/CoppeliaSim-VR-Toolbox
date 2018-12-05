@@ -59,12 +59,14 @@ public:
 	void setColorMap(int mode);
 	void toggleMode();
 	int getAltHandle() { return alternativeHandle; };
+
+	vtkSmartPointer<vtkFloatArray> getScalars() { return scalar; };
 protected:
 	int clientID;
 	int refHandle;
 	int objectHandle;
 	int currentMode = 0;
-	int alternativeHandle = 0;
+	int alternativeHandle = -1;
 
 	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();
 	vtkSmartPointer<vtkPoints> vertices = vtkSmartPointer<vtkPoints>::New();
