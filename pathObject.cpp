@@ -37,14 +37,23 @@ pathObject::pathObject(int ID)
 {
 	//return;
 	clientID = ID;
-	simxInt succes;
-	simxUChar *str;
-	simxInt signalLength;
-		succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_streaming);
-		if (succes <2) { // if signal exist than we will are in business, otherwise ignore
+
+	simxInt *data;
+	simxInt dataLength;
+	simxInt result;
+	result = simxCallScriptFunction(clientID, (simxChar*)"Camera_feeder", sim_scripttype_childscript, (simxChar*)"helloPath"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	if (result == 0) {
+		if (data[0] == 1) {
 			cout << "Connected to VREP path" << endl;
 			exist = true;
+			simxInt succes;
+			simxUChar *str;
+			simxInt signalLength;
+			succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_streaming); // start stream
+
 		}
+	}
 }
 
 
@@ -55,14 +64,14 @@ pathObject::~pathObject()
 vtkSmartPointer<vtkActor> pathObject::getActor() {
 	update();
 	cells->InsertNextCell(lineData);
-
+	points->Allocate(20000);
+	cells->Allocate(20000);
 	polyData->SetPoints(points);
 	polyData->SetLines(cells);
-
 	lineMapper->SetInputData(polyData);
 	lineActor->SetMapper(lineMapper);
 	lineActor->GetProperty()->SetColor(0.7, 0.14, 0.56);
-	lineActor->GetProperty()->SetLineWidth(5.0);
+	lineActor->GetProperty()->SetLineWidth(10.0);
 	lineActor->PickableOff();
 	pose->Identity();
 	pose->RotateX(-90);
@@ -76,24 +85,26 @@ void pathObject::update() {
 		simxUChar *str;
 		simxInt signalLength;
 		succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_buffer);
-		//cout << "Path status : " << succes << endl;
-		
-		if (succes == simx_return_ok) {
+ 		if (succes == simx_return_ok) {
 			signalLength = (int)(signalLength / 4);
-			points->SetNumberOfPoints((int)(signalLength / 3));
-			memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float));
-			//cells->SetNumberOfCells((int)((signalLength / 3)));
-			//cells->Initialize();
-			for (int i = cells->GetNumberOfCells()+1; i < (int)((signalLength / 3)); i++) {
+			if (signalLength > prevLength) {
+				points->SetNumberOfPoints((int)(signalLength / 3));
+				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float));
+				//cells->SetNumberOfCells((int)((signalLength / 3)));
+				//cells->Initialize();
+				for (int i = cells->GetNumberOfCells() + 1; i < (int)((signalLength / 3)); i++) {
 					cells->InsertNextCell(2);
-					cells->InsertCellPoint(i-1);
+					cells->InsertCellPoint(i - 1);
 					cells->InsertCellPoint(i);
+				}
+				points->Modified();
+				cells->Modified();
+				polyData->Modified();
+				prevLength = signalLength;
 			}
-		
-		
-			points->Modified();
-			cells->Modified();
-			polyData->Modified();
+			else {
+				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float)); // for it somebody else changed the path, some optimizer maybe
+			}
 		}
 		return;
 	}

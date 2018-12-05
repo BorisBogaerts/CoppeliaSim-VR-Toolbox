@@ -1,27 +1,54 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "connectWithVrep", "connectWithVrep.vcxproj", "{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vrepVIVE", "connectWithVrep.vcxproj", "{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "vrep_vr_installer", "..\vrep_vr_installer\vrep_vr_installer.wixproj", "{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		MinSizeRel|x64 = MinSizeRel|x64
+		MinSizeRel|x86 = MinSizeRel|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 		RelWithDebInfo|x64 = RelWithDebInfo|x64
+		RelWithDebInfo|x86 = RelWithDebInfo|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Debug|x64.ActiveCfg = Debug|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Debug|x64.Build.0 = Debug|x64
+		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Debug|x86.ActiveCfg = Debug|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.MinSizeRel|x64.ActiveCfg = MinSizeRel|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
+		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.MinSizeRel|x86.ActiveCfg = MinSizeRel|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Release|x64.ActiveCfg = Release|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Release|x64.Build.0 = Release|x64
+		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.Release|x86.ActiveCfg = Release|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
 		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
+		{57B9FDFE-8F70-3C15-88E2-9BC068ED48A2}.RelWithDebInfo|x86.ActiveCfg = RelWithDebInfo|x64
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Debug|x64.ActiveCfg = Debug|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Debug|x86.ActiveCfg = Debug|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Debug|x86.Build.0 = Debug|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.MinSizeRel|x64.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.MinSizeRel|x64.Build.0 = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.MinSizeRel|x86.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.MinSizeRel|x86.Build.0 = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Release|x64.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Release|x86.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.Release|x86.Build.0 = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.RelWithDebInfo|x64.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.RelWithDebInfo|x64.Build.0 = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.RelWithDebInfo|x86.ActiveCfg = Release|x86
+		{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}.RelWithDebInfo|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {396D1660-289F-4529-9B83-C7E774A3A528}
 	EndGlobalSection
 EndGlobal

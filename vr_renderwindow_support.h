@@ -89,7 +89,7 @@ protected:
 
 	vrep_volume_grid *grid;
 	vrep_vision_sensor *screenCam;
-	//pathObject *path;
+	pathObject *path;
 
 	vtkSmartPointer<vtkVectorText> vecText = vtkSmartPointer<vtkVectorText>::New();
 	vtkSmartPointer<vtkLinearExtrusionFilter> extrude = vtkSmartPointer<vtkLinearExtrusionFilter>::New();

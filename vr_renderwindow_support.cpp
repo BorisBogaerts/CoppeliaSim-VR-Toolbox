@@ -170,8 +170,6 @@ void vr_renderwindow_support::visionSensorThread() {
 		vrepScene->updateVisionSensorObjectPose();
 		coverage = vrepScene->updateVisionSensorRender();
 		dataReady = true;
-		//path->update();
-		//cout << "vision" << endl;
 		while (dataReady) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		};
@@ -286,9 +284,9 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->AddActor(txtActor);
 
 	// Search for dynamic path object
-	//path = new pathObject(clientID);
-	//renderer->AddActor(path->getActor());
-	//renderer->Modified();
+	path = new pathObject(clientID);
+	renderer->AddActor(path->getActor());
+	renderer->Modified();
 
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
@@ -310,6 +308,7 @@ void vr_renderwindow_support::activate_interactor() {
 		}
 		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 		updateText();
+		path->update();
 		if (isReady()) {
 			syncData(vr_renderWindowInteractor, renderWindow, renderer);
 			//grid->updatMap();

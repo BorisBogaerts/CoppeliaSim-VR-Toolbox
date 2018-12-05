@@ -48,7 +48,7 @@ public:
 protected:
 	int clientID;
 	bool exist = false;
-
+	int prevLength = 0;
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
 	vtkSmartPointer<vtkCellArray> cells =vtkSmartPointer<vtkCellArray>::New();
