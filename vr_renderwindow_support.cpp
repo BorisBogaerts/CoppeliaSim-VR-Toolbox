@@ -43,8 +43,8 @@
 
 #include <thread>
 #include <chrono>
-
-
+//#include <vtkOutputWindow.h>
+//#include <vtkFileOutputWindow.h>
 
 class eventCatcher : public vtkOpenVRInteractorStyle
 {
@@ -121,6 +121,15 @@ vr_renderwindow_support::vr_renderwindow_support(int cid, int ref, int interacto
 	if (data[0] != 0) {
 
 	}
+
+	/*vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
+	vtkFileOutputWindow* fow = vtkFileOutputWindow::New();
+	fow->SetFileName("debug.log");
+	if (ow)
+	{
+		ow->SetInstance(fow);
+	}
+	fow->Delete();*/
 }
 
 vr_renderwindow_support::~vr_renderwindow_support()

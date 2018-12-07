@@ -184,39 +184,16 @@ void vrep_mesh_object::setCustomShader() {
 	norms->SetInputData(cleanPolyData->GetOutput());
 	norms->Update();
 	vrep_polyData_mapper->SetInputData(norms->GetOutput());
+	// Add vertex position data
 	vrep_polyData_mapper->AddShaderReplacement(
-		vtkShader::Vertex,
-		"//VTK::Normal::Dec", // replace the normal block
-		true, // before the standard replacements
-		"//VTK::Normal::Dec\n" // we still want the default
-		"  varying vec3 myNormalMCVSOutput;\n", //but we add this
-		false // only do it once
+		vtkShader::Fragment,
+		"//VTK::Normal::Impl", 
+		true, 
+		"//VTK::Normal::Impl\n" 
+		"  diffuseColor = abs(normalVCVSOutput);\n"
+		"  float ca =  normalVCVSOutput[2]; \n" //Simple trick: normalVCVSOutput is the surface normal of the object in view coordinates. the [2] component (z) is the dot product with the Z axis of the camera (cosine angle)
+		"  float di = sqrt(pow(vertexVCVSOutput[0],2) + pow(vertexVCVSOutput[1],2) + pow(vertexVCVSOutput[2],2));" // this calculates the distance from the point to the camera
+		"  diffuseColor[2] = ca/pow(di,2);\n",  // and this fuses both values into one quality measure
+		false 
 	);
-	vrep_polyData_mapper->AddShaderReplacement(
-		vtkShader::Vertex,
-		"//VTK::Normal::Impl", // replace the normal block
-		true, // before the standard replacements
-		"//VTK::Normal::Impl\n" // we still want the default
-		"  myNormalMCVSOutput = normalMC;\n", //but we add this
-		false // only do it once
-	);
-
-	// now modify the fragment shader
-	vrep_polyData_mapper->AddShaderReplacement(
-		vtkShader::Fragment,  // in the fragment shader
-		"//VTK::Normal::Dec", // replace the normal block
-		true, // before the standard replacements
-		"//VTK::Normal::Dec\n" // we still want the default
-		"  varying vec3 myNormalMCVSOutput;\n", //but we add this
-		false // only do it once
-	);
-	vrep_polyData_mapper->AddShaderReplacement(
-		vtkShader::Fragment,  // in the fragment shader
-		"//VTK::Normal::Impl", // replace the normal block
-		true, // before the standard replacements
-		"//VTK::Normal::Impl\n" // we still want the default calc
-		"  diffuseColor = abs(myNormalMCVSOutput);\n", //but we add this
-		false // only do it once
-	);
-
 }

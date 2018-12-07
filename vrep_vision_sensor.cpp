@@ -83,7 +83,7 @@ vtkSmartPointer<vtkPolyData> vrep_vision_sensor::getQuality() {
 	double view[4];
 	double dx[3];
 	double xx[4] = { x[0], x[1], x[2], 1.0 };
-	double pix;
+	float pix;
 	double * displayCoordinates;
 	vtkSmartPointer<vtkMatrix4x4> M = vtkSmartPointer<vtkMatrix4x4>::New();
 	M = vr_camera->GetCompositeProjectionTransformMatrix(renderer->GetTiledAspectRatio(), 0, 1); // get the transorm
@@ -98,9 +98,10 @@ vtkSmartPointer<vtkPolyData> vrep_vision_sensor::getQuality() {
 		displayCoordinates = renderer->GetViewPoint();
 		renderer->ViewToDisplay();
 		renderer->GetDisplayPoint(dx);
+		// Following check is necessary because a slight change is position is posible
 		if ((static_cast<int>(dx[0]) >= 0) && (static_cast<int>(dx[0]) < dims[0]) && (static_cast<int>(dx[1]) >= 0) && (static_cast<int>(dx[1]) < dims[1])) {
-			pix = filter->GetOutput()->GetScalarComponentAsDouble(static_cast<int>(dx[0]), static_cast<int>(dx[1]), 0, 0) / 255; // rendered image is also in the texture so we'll get it there because it is easier)
-			quality->SetValue(i, (float)pix);
+			pix = filter->GetOutput()->GetScalarComponentAsFloat(static_cast<int>(dx[0]), static_cast<int>(dx[1]), 0, 2) / 255; // rendered image is also in the texture so we'll get it there because it is easier)
+			quality->SetValue(i, pix);
 		}
 	}
 	data->GetPointData()->AddArray(quality);
@@ -202,7 +203,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 	//resize->SetInputConnection(filter->GetOutputPort()); // extra
 	//texture->SetInputData(image);
 	texture->SetInputConnection(filter->GetOutputPort());
-	texture2->SetInputData(image);
+	texture2->SetInputData(image); // play with different textures to seperate data between threads
 	panel->SetTexture(texture2);
 	panel->Modified();
 
