@@ -239,7 +239,6 @@ void vrep_scene_content::vrep_get_object_pose() {
 }
 
 float vrep_scene_content::computeScalarField() {
-	scalar = vtkSmartPointer<vtkFloatArray>::New();
 	if (volumePresent) {
 		scalar->SetNumberOfValues(vol->getNumberOfValues());
 	}
@@ -255,7 +254,12 @@ float vrep_scene_content::computeScalarField() {
 			for (int ii = 0; ii < temp->GetPointData()->GetArray(0)->GetNumberOfTuples(); ii++) {
 				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii);
 				float prevVal = scalar->GetValue(ID);
-				scalar->SetValue(ID, prevVal +1);
+
+				if (camsContainer[i].useQuality()) {
+					scalar->SetValue(ID, prevVal + temp->GetPointData()->GetArray(1)->GetTuple1(ii)); // if quality value is available, use this
+				}else {
+					scalar->SetValue(ID, prevVal + 1); // if no quality, just say it is visible
+				}
 				if (prevVal == 0) {
 					count++;
 				}
@@ -311,6 +315,9 @@ void vrep_scene_content::checkMeasurementObject() {
 				camsContainer[ii].setPointData(vertices, vrepMeshContainer[i].getPose());
 				activeThread = true;
 			}
+
+			vrepMeshContainer[i].getMapper()->SetLookupTable(vol->getLUT(10)); // sets colormap  
+			vrepMeshContainer2[i].setCustomShader(); // compute custom measurement quality function
 			//volumePresent = true;
 		}
 	}

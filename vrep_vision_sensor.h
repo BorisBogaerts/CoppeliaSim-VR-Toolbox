@@ -73,12 +73,15 @@ public:
 	void setPointData(vtkSmartPointer<vtkPoints> data, vtkSmartPointer<vtkTransform> pose);
 	void updatePose();
 	void transferImageTexture();
+	vtkSmartPointer<vtkPolyData> getQuality();
+	bool useQuality() { return computeQuality; };
 private:
 	int clientID;
 	int handle;
 	int update = 10;
 	bool basic = false;
 	int refH;
+	bool computeQuality = true;
 
 	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
 	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();

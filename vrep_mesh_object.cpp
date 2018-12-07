@@ -41,7 +41,8 @@
 #include <cmath>
 #include <dense>
 #include <vtkMatrix4x4.h>
-
+#include <vtkPolyDataNormals.h>
+#include <vtkCleanPolyData.h>
 #define PI 3.14f
 
 vrep_mesh_object::vrep_mesh_object() {
@@ -172,4 +173,50 @@ void vrep_mesh_object::deepCopy(vrep_mesh_object *newObject) {
 	newObject->setName(vrep_model_name);
 	newObject->setClientID(clientID, refHandle);
 	newObject->makeActor();
+}
+
+void vrep_mesh_object::setCustomShader() {
+	vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
+	cleanPolyData->SetInputData(meshData);
+	cleanPolyData->Update();
+
+	vtkSmartPointer<vtkPolyDataNormals> norms = vtkSmartPointer<vtkPolyDataNormals>::New(); // let me see those normals!!!
+	norms->SetInputData(cleanPolyData->GetOutput());
+	norms->Update();
+	vrep_polyData_mapper->SetInputData(norms->GetOutput());
+	vrep_polyData_mapper->AddShaderReplacement(
+		vtkShader::Vertex,
+		"//VTK::Normal::Dec", // replace the normal block
+		true, // before the standard replacements
+		"//VTK::Normal::Dec\n" // we still want the default
+		"  varying vec3 myNormalMCVSOutput;\n", //but we add this
+		false // only do it once
+	);
+	vrep_polyData_mapper->AddShaderReplacement(
+		vtkShader::Vertex,
+		"//VTK::Normal::Impl", // replace the normal block
+		true, // before the standard replacements
+		"//VTK::Normal::Impl\n" // we still want the default
+		"  myNormalMCVSOutput = normalMC;\n", //but we add this
+		false // only do it once
+	);
+
+	// now modify the fragment shader
+	vrep_polyData_mapper->AddShaderReplacement(
+		vtkShader::Fragment,  // in the fragment shader
+		"//VTK::Normal::Dec", // replace the normal block
+		true, // before the standard replacements
+		"//VTK::Normal::Dec\n" // we still want the default
+		"  varying vec3 myNormalMCVSOutput;\n", //but we add this
+		false // only do it once
+	);
+	vrep_polyData_mapper->AddShaderReplacement(
+		vtkShader::Fragment,  // in the fragment shader
+		"//VTK::Normal::Impl", // replace the normal block
+		true, // before the standard replacements
+		"//VTK::Normal::Impl\n" // we still want the default calc
+		"  diffuseColor = abs(myNormalMCVSOutput);\n", //but we add this
+		false // only do it once
+	);
+
 }

@@ -39,7 +39,7 @@
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkFloatArray.h>
 #include <vtkTransform.h>
-
+#include <vtkLookupTable.h>
 #pragma once
 class vrep_volume_grid
 {
@@ -59,7 +59,7 @@ public:
 	void setColorMap(int mode);
 	void toggleMode();
 	int getAltHandle() { return alternativeHandle; };
-
+	vtkSmartPointer<vtkLookupTable> getLUT(int numValues);
 	vtkSmartPointer<vtkFloatArray> getScalars() { return scalar; };
 protected:
 	int clientID;
@@ -74,5 +74,6 @@ protected:
 	vtkSmartPointer<vtkVolume> volume = vtkSmartPointer<vtkVolume>::New();
 	vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
 	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();
+	vtkSmartPointer<vtkLookupTable> LUT = vtkSmartPointer<vtkLookupTable>::New();
 };
 

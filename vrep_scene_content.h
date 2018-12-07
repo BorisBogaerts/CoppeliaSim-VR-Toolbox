@@ -102,7 +102,7 @@ protected:
 	std::vector<vrep_mesh_object> vrepMeshContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer2;
 
-	vtkSmartPointer<vtkFloatArray> scalar;
+	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();;
 };
 
 #endif

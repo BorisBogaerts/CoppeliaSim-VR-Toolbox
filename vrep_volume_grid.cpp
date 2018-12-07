@@ -213,3 +213,20 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 	volume->PickableOff();
 	return volume;
 }
+
+vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {
+	vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction = vtkSmartPointer<vtkColorTransferFunction>::New();
+	colorTransferFunction->AddRGBPoint(0, 0.1, 0.1, 0.1); // start with grey
+	colorTransferFunction->AddRGBPoint(0.1, 0.706, 0.016, 0.150); // cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/
+	colorTransferFunction->AddRGBPoint(1, 0.230, 0.299, 0.754);
+	LUT->SetNumberOfTableValues(numValues); // Build lookup table
+	LUT->Build();
+
+	for (int i = 0; i < numValues; ++i){
+		double *rgb;
+		rgb = colorTransferFunction->GetColor(static_cast<double>(i) / numValues);
+		rgb[3] = 1.0;
+		LUT->SetTableValue(i, rgb);
+	}
+	return LUT;
+}

@@ -36,6 +36,8 @@
 #include <sstream>
 #include <iterator>
 #include <fstream>
+#include <vtkMatrix4x4.h>
+#include <vtkFloatArray.h>
 void vrep_vision_sensor::updatePosition() {
 	this->updatePose();
 	invPose->DeepCopy(pose);
@@ -66,8 +68,45 @@ void vrep_vision_sensor::updatePose() {
 vtkSmartPointer<vtkPolyData> vrep_vision_sensor::checkVisibility() {
 	ptsT->Update();
 	selectVisiblePoints->Update();
+	if (computeQuality) {
+		return getQuality();
+	}
 	return selectVisiblePoints->GetOutput();
 }
+
+vtkSmartPointer<vtkPolyData> vrep_vision_sensor::getQuality() {
+	vtkSmartPointer<vtkPolyData> data = vtkSmartPointer<vtkPolyData>::New();
+	vtkSmartPointer<vtkFloatArray> quality = vtkSmartPointer<vtkFloatArray>::New();
+	data = selectVisiblePoints->GetOutput();
+	quality->SetNumberOfValues(data->GetNumberOfPoints());
+	double x[3];
+	double view[4];
+	double dx[3];
+	double xx[4] = { x[0], x[1], x[2], 1.0 };
+	double pix;
+	double * displayCoordinates;
+	vtkSmartPointer<vtkMatrix4x4> M = vtkSmartPointer<vtkMatrix4x4>::New();
+	M = vr_camera->GetCompositeProjectionTransformMatrix(renderer->GetTiledAspectRatio(), 0, 1); // get the transorm
+	int dims[3];
+	filter->GetOutput()->GetDimensions(dims);
+	quality->FillValue((float)0);
+	// Transformation sequence is discussed in : https://public.kitware.com/pipermail/vtkusers/2010-September/062478.html
+	for (int i = 0; i < data->GetNumberOfPoints(); i++) {
+		data->GetPoint(i, x); // get a mesh point
+		renderer->SetWorldPoint(x);
+		renderer->WorldToView();
+		displayCoordinates = renderer->GetViewPoint();
+		renderer->ViewToDisplay();
+		renderer->GetDisplayPoint(dx);
+		if ((static_cast<int>(dx[0]) >= 0) && (static_cast<int>(dx[0]) < dims[0]) && (static_cast<int>(dx[1]) >= 0) && (static_cast<int>(dx[1]) < dims[1])) {
+			pix = filter->GetOutput()->GetScalarComponentAsDouble(static_cast<int>(dx[0]), static_cast<int>(dx[1]), 0, 0) / 255; // rendered image is also in the texture so we'll get it there because it is easier)
+			quality->SetValue(i, (float)pix);
+		}
+	}
+	data->GetPointData()->AddArray(quality);
+	return data;
+}
+
 
 void vrep_vision_sensor::setPointData(vtkSmartPointer<vtkPoints> data, vtkSmartPointer<vtkTransform> pose) {
 	data->SetDataTypeToFloat();

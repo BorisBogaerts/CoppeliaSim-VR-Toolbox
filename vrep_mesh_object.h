@@ -30,7 +30,7 @@
 
 #include "vtkTransform.h"
 #include <vtkSmartPointer.h>
-#include <vtkPolyDataMapper.h>
+#include <vtkOpenGLPolyDataMapper.h>
 #include <vtkPolyData.h>
 #include <vtkActor.h>
 #include <string>
@@ -63,6 +63,7 @@ public:
 	void extractDataFromReader(vrep_mesh_reader reader);
 	void makeActor();
 	vtkSmartPointer<vtkActor> getActor() { return vrep_mesh_actor; };
+	vtkSmartPointer<vtkPolyDataMapper> getMapper() { return vrep_polyData_mapper; };
 	void updatePosition();
 	vtkSmartPointer<vtkPolyData> getMeshData() { return meshData; };
 	vtkSmartPointer<vtkTransform> getPose() { return pose; };
@@ -72,10 +73,11 @@ public:
 	vtkSmartPointer<vtkTransform> getCamTransform();
 	void setActor(vtkSmartPointer<vtkActor> act);
 	void deepCopy(vrep_mesh_object *newObject);
+	void setCustomShader();
 protected:
 	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();
 	vtkSmartPointer<vtkPolyData> meshData = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkPolyDataMapper> vrep_polyData_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	vtkSmartPointer<vtkOpenGLPolyDataMapper> vrep_polyData_mapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
 	vtkSmartPointer<vtkActor> vrep_mesh_actor = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
 
