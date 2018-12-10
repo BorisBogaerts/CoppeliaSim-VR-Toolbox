@@ -95,6 +95,9 @@ protected:
 	bool volumePresent = false;
 	bool activeThread = false;
 	int numPoints;
+	float qualityThreshold = 4.0;
+	bool integrateMeasurement = false;
+	int count = 0;
 	vtkSmartPointer<vtkVolume> volume;
 	
 

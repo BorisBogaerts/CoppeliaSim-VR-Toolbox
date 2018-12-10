@@ -148,29 +148,29 @@ void vrep_volume_grid::setColorMap(int mode) {
 		simxCallScriptFunction(clientID, (simxChar*)"Field", sim_scripttype_childscript, (simxChar*)"getColorMapData"
 			, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numLengths, &lengths, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_streaming);
 		for (int i = 0; i < lengths[0]; i++) {
-			opacityTransferFunction->AddPoint(data[i * 2], data[(i * 2) + 1]);
+			opacityTransferFunction->AddPoint(data[i * 2]/4.0, data[(i * 2) + 1]);
 
 		}
 		//cout << endl;
 		for (int i = 0; i < lengths[1]; i++) {
 			int beginID = (lengths[0] * 2) + (i * 4);
-			colorTransferFunction->AddRGBPoint(data[beginID], data[beginID+1], data[beginID+2], data[beginID+3]);
+			colorTransferFunction->AddRGBPoint(data[beginID]/4.0, data[beginID+1], data[beginID+2], data[beginID+3]);
 			//cout << "Point added : " << data[beginID] << "	" << data[beginID + 1] << "	" << data[beginID + 2] << "	" << data[beginID + 3] << endl;
 		}
 		//opacityTransferFunction->AddPoint(0, 0.0);
 		//opacityTransferFunction->AddPoint(1, 0.1);
 		//opacityTransferFunction->AddPoint(2, 0.1);
 		//opacityTransferFunction->AddPoint(3, 0.2);
-		colorTransferFunction->AddRGBPoint(0, 0, 0, 1);
-		colorTransferFunction->AddRGBPoint(1, 0, 0.5, 0.5);
-		colorTransferFunction->AddRGBPoint(2, 0, 0.8, 0.0);
-		colorTransferFunction->AddRGBPoint(3, 0.5, 0.5, 0.8);
-		colorTransferFunction->AddRGBPoint(4, 0.8, 0, 0);
+	/*	colorTransferFunction->AddRGBPoint(0, 0, 0, 1);
+		colorTransferFunction->AddRGBPoint(0.25, 0, 0.5, 0.5);
+		colorTransferFunction->AddRGBPoint(0.5, 0, 0.8, 0.0);
+		colorTransferFunction->AddRGBPoint(0.75, 0.5, 0.5, 0.8);
+		colorTransferFunction->AddRGBPoint(1.0, 0.8, 0, 0);*/
 	}
 	else {
 		opacityTransferFunction->AddPoint(0, 0.8);
-		opacityTransferFunction->AddPoint(0.5, 0);
-		opacityTransferFunction->AddPoint(1, 0);
+		opacityTransferFunction->AddPoint(0.125, 0);
+		opacityTransferFunction->AddPoint(0.25, 0);
 		colorTransferFunction->AddRGBPoint(0.0, 1.0, 0.0, 0.0);
 	}
 	vtkSmartPointer<vtkVolumeProperty> volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
@@ -216,7 +216,7 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 
 vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {
 	vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction = vtkSmartPointer<vtkColorTransferFunction>::New();
-	colorTransferFunction->AddRGBPoint(0, 0.1, 0.1, 0.1); // start with grey
+	colorTransferFunction->AddRGBPoint(0, 0.6, 0.6, 0.6); // start with grey
 	colorTransferFunction->AddRGBPoint(0.1, 0.706, 0.016, 0.150); // cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/
 	colorTransferFunction->AddRGBPoint(1, 0.230, 0.299, 0.754);
 	LUT->SetNumberOfTableValues(numValues); // Build lookup table

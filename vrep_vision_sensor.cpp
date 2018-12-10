@@ -89,7 +89,6 @@ vtkSmartPointer<vtkPolyData> vrep_vision_sensor::getQuality() {
 	M = vr_camera->GetCompositeProjectionTransformMatrix(renderer->GetTiledAspectRatio(), 0, 1); // get the transorm
 	int dims[3];
 	filter->GetOutput()->GetDimensions(dims);
-	quality->FillValue((float)0);
 	// Transformation sequence is discussed in : https://public.kitware.com/pipermail/vtkusers/2010-September/062478.html
 	for (int i = 0; i < data->GetNumberOfPoints(); i++) {
 		data->GetPoint(i, x); // get a mesh point
@@ -102,6 +101,9 @@ vtkSmartPointer<vtkPolyData> vrep_vision_sensor::getQuality() {
 		if ((static_cast<int>(dx[0]) >= 0) && (static_cast<int>(dx[0]) < dims[0]) && (static_cast<int>(dx[1]) >= 0) && (static_cast<int>(dx[1]) < dims[1])) {
 			pix = filter->GetOutput()->GetScalarComponentAsFloat(static_cast<int>(dx[0]), static_cast<int>(dx[1]), 0, 2) / 255; // rendered image is also in the texture so we'll get it there because it is easier)
 			quality->SetValue(i, pix);
+		}
+		else {
+			quality->SetValue(i, 0.0);
 		}
 	}
 	data->GetPointData()->AddArray(quality);

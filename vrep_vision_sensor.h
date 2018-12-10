@@ -75,6 +75,7 @@ public:
 	void transferImageTexture();
 	vtkSmartPointer<vtkPolyData> getQuality();
 	bool useQuality() { return computeQuality; };
+	void setQualityMode(bool mode) { computeQuality = mode; }
 private:
 	int clientID;
 	int handle;

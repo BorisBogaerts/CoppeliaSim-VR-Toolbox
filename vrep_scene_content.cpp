@@ -246,21 +246,26 @@ float vrep_scene_content::computeScalarField() {
 		scalar->SetNumberOfValues(numPoints);
 	}
 	
-	scalar->FillValue((float)0);
-	int count = 0;
+	if (!integrateMeasurement) {
+		scalar->FillValue((float)0);
+		count = 0;
+	}
 //#pragma loop(hint_parallel(4))  
 		for (int i = 0; i <camsContainer.size(); i++) {
 			vtkSmartPointer<vtkPolyData> temp = camsContainer[i].checkVisibility();
 			for (int ii = 0; ii < temp->GetPointData()->GetArray(0)->GetNumberOfTuples(); ii++) {
 				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii);
 				float prevVal = scalar->GetValue(ID);
-
+				float newqual;
 				if (camsContainer[i].useQuality()) {
-					scalar->SetValue(ID, prevVal + temp->GetPointData()->GetArray(1)->GetTuple1(ii)); // if quality value is available, use this
+					//newqual = std::min((float)1.0, (float)(prevVal + temp->GetPointData()->GetArray(1)->GetTuple1(ii))/qualityThreshold);
+					newqual = std::max(prevVal, (float)temp->GetPointData()->GetArray(1)->GetTuple1(ii))/ qualityThreshold;
+					scalar->SetValue(ID,  newqual); // if quality value is available, use this (clip quality)
 				}else {
-					scalar->SetValue(ID, prevVal + 1); // if no quality, just say it is visible
+					newqual = std::min((float)1.0, prevVal + 1);
+					scalar->SetValue(ID,  newqual); // if no quality, just say it is visible
 				}
-				if (prevVal == 0) {
+				if ((prevVal < newqual) && (newqual==1.0)) {
 					count++;
 				}
 			}
@@ -298,9 +303,7 @@ void vrep_scene_content::checkMeasurementObject() {
 			scalar->SetNumberOfComponents(1);
 			scalar->SetNumberOfValues(meshData->GetNumberOfPoints()); // one value for each vertex
 			numPoints = meshData->GetNumberOfPoints();
-			for (int ii = 1; ii < meshData->GetNumberOfPoints(); ii++) {
-				scalar->SetValue(ii, (float)rand() / (RAND_MAX)); // for debugging, let's give them a random color to start of
-			}
+			scalar->FillValue(0.0); 
 			scalar->SetName("scalars");
 			meshData->GetPointData()->SetScalars(scalar); // add scalars to the mesh
 			meshData->GetPointData()->SetActiveScalars("scalars"); // make them "active"
@@ -310,14 +313,31 @@ void vrep_scene_content::checkMeasurementObject() {
 			for (int ii = 0; ii < meshData->GetNumberOfPoints(); ii++) {
 				vertices->InsertPoint(ii, meshData->GetPoint(ii));
 			}
+			// Use quality or not?
+			int *sizes;
+			int numVals;
+			simxFloat *data;
+			simxInt dataLength;
+			simxCallScriptFunction(clientID, (simxChar*)"Camera_feeder", sim_scripttype_childscript, (simxChar*)"getQualityMode"
+				, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numVals, &sizes, &dataLength, &data,NULL, NULL, NULL, NULL, simx_opmode_blocking);
+			bool useCustomQuality;
+			integrateMeasurement = (sizes[1] > 0);
+			if (sizes[0] > 0) {
+				useCustomQuality = true;
+				qualityThreshold = std::max((float)data[0], (float)1e-3); // otherwise we might divide by zero
+				vrepMeshContainer2[i].setCustomShader(); // compute custom measurement quality function
+			}
+			else {
+				useCustomQuality = false;
+			}
 			// Now connect the points to the vision sensor (these mesh points will be used in the visibility check)
 			for (int ii = 0; ii < camsContainer.size(); ii++) {
 				camsContainer[ii].setPointData(vertices, vrepMeshContainer[i].getPose());
+				camsContainer[ii].setQualityMode(useCustomQuality);
 				activeThread = true;
 			}
 
 			vrepMeshContainer[i].getMapper()->SetLookupTable(vol->getLUT(10)); // sets colormap  
-			vrepMeshContainer2[i].setCustomShader(); // compute custom measurement quality function
 			//volumePresent = true;
 		}
 	}

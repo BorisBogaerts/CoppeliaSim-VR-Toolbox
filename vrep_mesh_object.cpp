@@ -178,22 +178,112 @@ void vrep_mesh_object::deepCopy(vrep_mesh_object *newObject) {
 void vrep_mesh_object::setCustomShader() {
 	vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
 	cleanPolyData->SetInputData(meshData);
-	cleanPolyData->Update();
+	cleanPolyData->Update(); // Make shure mesh is clean before we compute normals (otherwise it will crash)
 
 	vtkSmartPointer<vtkPolyDataNormals> norms = vtkSmartPointer<vtkPolyDataNormals>::New(); // let me see those normals!!!
 	norms->SetInputData(cleanPolyData->GetOutput());
 	norms->Update();
 	vrep_polyData_mapper->SetInputData(norms->GetOutput());
+
+	// Get custom shader code from V-REP
+	char* name;
+	simxInt nameLength;
+	simxCallScriptFunction(clientID, (simxChar*)"Camera_feeder", sim_scripttype_childscript, (simxChar*)"getCustomShaderCode"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, &nameLength, &name, NULL, NULL, simx_opmode_blocking);
+	char* code = new char[nameLength];
+	
+
+	std::string newCode;
+	newCode.append("//VTK::Normal::Impl\n"
+		"  float ca =  normalVCVSOutput[2];\n" //Simple trick: normalVCVSOutput is the surface normal of the object in view coordinates. the [2] component (z) is the dot product with the Z axis of the camera (cosine angle)
+		"  float di = sqrt(pow(vertexVCVSOutput[0],2) + pow(vertexVCVSOutput[1],2) + pow(vertexVCVSOutput[2],2));\n" // this calculates the distance from the point to the camera
+		"  fragOutput0[0] = ca;\n" // the cosine of the angle between camera Z and triangle normal are stored in the red channel
+		"  fragOutput0[1] = di;\n" // the distance of the measured point is stored in the green channel
+		"  fragOutput0[2] = "
+	);
+
+	for (int i = 0; i < nameLength; i++) {
+		newCode.append(&name[i]);
+	};
+
+	newCode.append(";\n"
+		"  fragOutput0[3] = 1;\n");
+	cout << endl;
+	cout << "Custom shader code added : " << endl;
+	cout << newCode << endl;
 	// Add vertex position data
-	vrep_polyData_mapper->AddShaderReplacement(
+	vrep_polyData_mapper->AddShaderReplacement( // strategically replace a few lines of code in the fragment shader.
 		vtkShader::Fragment,
 		"//VTK::Normal::Impl", 
 		true, 
-		"//VTK::Normal::Impl\n" 
-		"  diffuseColor = abs(normalVCVSOutput);\n"
-		"  float ca =  normalVCVSOutput[2]; \n" //Simple trick: normalVCVSOutput is the surface normal of the object in view coordinates. the [2] component (z) is the dot product with the Z axis of the camera (cosine angle)
-		"  float di = sqrt(pow(vertexVCVSOutput[0],2) + pow(vertexVCVSOutput[1],2) + pow(vertexVCVSOutput[2],2));" // this calculates the distance from the point to the camera
-		"  diffuseColor[2] = ca/pow(di,2);\n",  // and this fuses both values into one quality measure
+		newCode,
+		false // we "hide" the quality value in the blue channel
+	);
+	
+	// Now remove a bunch of stuff (we don't want lights for example to interfere with quality computation)
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove colors
+		vtkShader::Fragment,
+		"//VTK::Color::Dec",
+		true,
+		"",
 		false 
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove lights
+		vtkShader::Fragment,
+		"//VTK::Light::Dec",
+		true,
+		"",
+		false 
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove colors
+		vtkShader::Fragment,
+		"//VTK::Color::Impl",
+		true,
+		"",
+		false
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove lights
+		vtkShader::Fragment,
+		"//VTK::Light::Impl",
+		true,
+		"",
+		false
+	);
+
+	// same for vertex shader
+	vrep_polyData_mapper->AddShaderReplacement( // Remove colors
+		vtkShader::Vertex,
+		"//VTK::Color::Dec",
+		true,
+		"",
+		false
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove lights
+		vtkShader::Vertex,
+		"//VTK::Light::Dec",
+		true,
+		"",
+		false
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove colors
+		vtkShader::Vertex,
+		"//VTK::Color::Impl",
+		true,
+		"",
+		false
+	);
+
+	vrep_polyData_mapper->AddShaderReplacement( // Remove lights
+		vtkShader::Vertex,
+		"//VTK::Light::Impl",
+		true,
+		"",
+		false
 	);
 }
