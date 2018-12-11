@@ -30,7 +30,6 @@
 
 #include "timerClass.h"
 #include <sstream>
-
 using namespace std;
 void timerClass::increment() {
 	if (counter == 0) {
@@ -75,3 +74,4 @@ void timerClass::increment2() {
 		text = ss.str();
 	}
 }
+

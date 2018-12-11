@@ -1,6 +1,9 @@
 # V-REP-VR-Interface
 This repository contains the code to experience V-REP in VR. It can visualize V-REP scenes in openvr compatible devices (HTC-VIVE and HTC-VIVE Pro are tested) and return user manipulations to V-REP. It is also able to visualize the coverage of camera systems (later more).
 
+Installation instructions and a feature overview is now also available in a youtube video:
+https://www.youtube.com/watch?v=_GXVdgihVgQ
+
 Some Youtube videos showing the interface in action:
 - https://www.youtube.com/watch?v=yMydjviF7yg
 - https://www.youtube.com/watch?v=Dsh8oyN4sD0&t
@@ -12,6 +15,8 @@ The interface has the following capabilities:
 - Send buttonpress events to V-REP as string signals
 
 # Installation (easy)
+Installation instructions are now also available on youtube: https://www.youtube.com/watch?v=_GXVdgihVgQ
+
 This repository can be installed by an installer package available under the release tab in this repository. 
 
 After running the installer the user needs to run the bat file (copyToVREP.bat) as administrator. This bat file can be found in the installation directory of the interface typically (C:\Program Files (x86)\V-REP VR interface). 

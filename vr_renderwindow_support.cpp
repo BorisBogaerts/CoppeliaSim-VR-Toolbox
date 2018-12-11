@@ -43,8 +43,8 @@
 
 #include <thread>
 #include <chrono>
-#include <vtkOutputWindow.h>
-#include <vtkFileOutputWindow.h>
+//#include <vtkOutputWindow.h>
+//#include <vtkFileOutputWindow.h>
 
 class eventCatcher : public vtkOpenVRInteractorStyle
 {
@@ -75,7 +75,7 @@ public:
 		}
 		else if (button == vtkEventDataDeviceInput::TrackPad) {
 			trackpad = true;
-			signalName.append("TrackPad");
+			signalName.append("TrackPadX");
 		}
 
 		if (action == vtkEventDataAction::Press) {
@@ -87,6 +87,7 @@ public:
 
 		if ((controller == vtkEventDataDevice::LeftController) && (button == vtkEventDataDeviceInput::TrackPad)&& (action == vtkEventDataAction::Release)) {
 			if ((grid != nullptr)){
+				cout << endl << "Collormap toggle" << endl;
 				grid->toggleMode();
 			}
 		}
@@ -121,14 +122,14 @@ vr_renderwindow_support::vr_renderwindow_support(int cid, int ref, int interacto
 
 	}
 
-	vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
+	/*vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
 	vtkFileOutputWindow* fow = vtkFileOutputWindow::New();
 	fow->SetFileName("debug.log");
 	if (ow)
 	{
 		ow->SetInstance(fow);
 	}
-	fow->Delete();
+	fow->Delete();*/
 }
 
 vr_renderwindow_support::~vr_renderwindow_support()

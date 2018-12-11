@@ -32,6 +32,7 @@
 #include <ctime>
 #include <string>
 #include <iostream>
+
 #pragma once
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -51,6 +52,7 @@ private:
 	int countInterval2 = 10;
 	double time, time2;
 	int mode = 0;
+	int chartCounter = 0;
 	std::string text;
 	std::chrono::steady_clock::time_point t1;
 	std::chrono::steady_clock::time_point t2;

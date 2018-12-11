@@ -61,7 +61,6 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 
 	if (doubleScene) { 
 		vrepMeshContainer2.reserve(200); 
-		
 	};
 	// read geometry
 	while (v > 0) { 
@@ -239,36 +238,56 @@ void vrep_scene_content::vrep_get_object_pose() {
 }
 
 float vrep_scene_content::computeScalarField() {
-	if (volumePresent) {
-		scalar->SetNumberOfValues(vol->getNumberOfValues());
-	}
-	else {
-		scalar->SetNumberOfValues(numPoints);
+	if (firstTime) {
+		if (volumePresent) {
+			scalar->SetNumberOfValues(vol->getNumberOfValues());
+			state->SetNumberOfValues(vol->getNumberOfValues());
+		}
+		else {
+			state->SetNumberOfValues(numPoints);
+			scalar->SetNumberOfValues(numPoints);
+		}
+		scalar->FillValue((float)0);
+		state->FillValue((float)0);
+		firstTime = false;
 	}
 	
+	
+	int reset, inProgress=0;
 	if (!integrateMeasurement) {
-		scalar->FillValue((float)0);
+		scalar->FillValue((float)0); // if not integration just clear previous
 		count = 0;
+	}else {
+		simxGetIntegerSignal(clientID, "ResetMeasurement", &reset, simx_opmode_streaming); // ask V-REP if we need to clear the measurementState
+		simxGetIntegerSignal(clientID, "MeasurementInProgress", &inProgress, simx_opmode_streaming); // ask vrep if measurement is in progress
+		if (reset > 0) {
+			simxSetIntegerSignal(clientID, "ResetMeasurement", 0, simx_opmode_blocking); // reset is received and acted upon
+			state->FillValue((float)0); // reset history
+		}
+		scalar->DeepCopy(state); // needed to allow a "preview" without having to "measure", thus field is adapted but not stored if not measuring
 	}
-//#pragma loop(hint_parallel(4))  
+
+
 		for (int i = 0; i <camsContainer.size(); i++) {
 			vtkSmartPointer<vtkPolyData> temp = camsContainer[i].checkVisibility();
+
 			for (int ii = 0; ii < temp->GetPointData()->GetArray(0)->GetNumberOfTuples(); ii++) {
-				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii);
-				float prevVal = scalar->GetValue(ID);
+				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii); // vertex ID (array only contains visible poins, other points are ommited)
+				float prevVal = scalar->GetValue(ID);  // if integration is not active then 
 				float newqual;
 				if (camsContainer[i].useQuality()) {
-					//newqual = std::min((float)1.0, (float)(prevVal + temp->GetPointData()->GetArray(1)->GetTuple1(ii))/qualityThreshold);
 					newqual = std::max(prevVal, (float)temp->GetPointData()->GetArray(1)->GetTuple1(ii))/ qualityThreshold;
-					scalar->SetValue(ID,  newqual); // if quality value is available, use this (clip quality)
 				}else {
 					newqual = std::min((float)1.0, prevVal + 1);
-					scalar->SetValue(ID,  newqual); // if no quality, just say it is visible
 				}
+				scalar->SetValue(ID, newqual); // if quality value is available, use this (clip quality)
 				if ((prevVal < newqual) && (newqual==1.0)) {
 					count++;
 				}
 			}
+		}
+		if (inProgress > 0) {
+			state->DeepCopy(scalar);
 		}
 		float coverage = (float)count / scalar->GetNumberOfValues();
 		return coverage;
@@ -322,6 +341,13 @@ void vrep_scene_content::checkMeasurementObject() {
 				, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numVals, &sizes, &dataLength, &data,NULL, NULL, NULL, NULL, simx_opmode_blocking);
 			bool useCustomQuality;
 			integrateMeasurement = (sizes[1] > 0);
+			if (integrateMeasurement) {
+				for (int j = 0; j < 10; j++) { // flush
+					int reset, inProgress;
+					simxGetIntegerSignal(clientID, "ResetMeasurement", &reset, simx_opmode_streaming); // ask V-REP if we need to clear the measurementState
+					simxGetIntegerSignal(clientID, "MeasurementInProgress", &inProgress, simx_opmode_streaming); // ask vrep if measurement is in progress
+				}
+			}
 			if (sizes[0] > 0) {
 				useCustomQuality = true;
 				qualityThreshold = std::max((float)data[0], (float)1e-3); // otherwise we might divide by zero

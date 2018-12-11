@@ -124,7 +124,7 @@ void vrep_vision_sensor::setPointData(vtkSmartPointer<vtkPoints> data, vtkSmartP
 	ptsT->SetInputData(ptset);
 	ptsT->SetTransform(pose);
 
-	selectVisiblePoints->SetTolerance(1e-4);
+	selectVisiblePoints->SetTolerance(5e-4);
 	selectVisiblePoints->SelectionWindowOff();
 	selectVisiblePoints->SetInputConnection(ptsT->GetOutputPort());
 	selectVisiblePoints->SetRenderer(renderer);

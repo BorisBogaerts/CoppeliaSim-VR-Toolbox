@@ -98,6 +98,7 @@ protected:
 	float qualityThreshold = 4.0;
 	bool integrateMeasurement = false;
 	int count = 0;
+	bool firstTime = true;
 	vtkSmartPointer<vtkVolume> volume;
 	
 
@@ -105,7 +106,8 @@ protected:
 	std::vector<vrep_mesh_object> vrepMeshContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer2;
 
-	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();;
+	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();
+	vtkSmartPointer<vtkFloatArray> state = vtkSmartPointer<vtkFloatArray>::New();
 };
 
 #endif

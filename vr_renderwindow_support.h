@@ -74,6 +74,7 @@ protected:
 	vrep_scene_content *vrepScene;
 	int clientID;
 	int handle;
+	
 	int refH;
 	int update = 10;
 	int useInteractor = true;
