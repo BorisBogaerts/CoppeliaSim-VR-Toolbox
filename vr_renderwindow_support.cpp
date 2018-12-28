@@ -249,6 +249,18 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->UseFXAAOn();
 	//renderer->UseFXAAOff();
 	renderer->SetBackground(1.0, 1.0, 1.0);
+
+	// Do some aestetic thingies
+	simxFloat *data;
+	simxInt dataLength;
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getEstetics"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	if (dataLength > 0) {
+		renderer->SetBackground(data[0], data[1], data[2]);
+		renderer->SetBackground2(data[3], data[4], data[5]);
+		renderer->SetGradientBackground(true);
+	}
+
 	renderer->AutomaticLightCreationOn();
 	renderer->SetAutomaticLightCreation(true);
 	renderer->LightFollowCameraOn();
@@ -297,7 +309,7 @@ void vr_renderwindow_support::activate_interactor() {
 	path = new pathObject(clientID);
 	renderer->AddActor(path->getActor());
 	renderer->Modified();
-
+	
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
 	if (vrepScene->startVisionSensorThread()) {

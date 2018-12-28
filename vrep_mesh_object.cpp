@@ -131,6 +131,16 @@ void vrep_mesh_object::updatePosition() {
 
 		pose->RotateX(-90);
 		pose->Modified();
+
+		//if (texturedObject) {
+		//	simxFloat xShift, yShift, xScale, yScale;
+		//	simxGetObjectFloatParameter(clientID, refHandle, 3006, &xShift, simx_opmode_streaming); // texture x shift
+		//	simxGetObjectFloatParameter(clientID, refHandle, 3007, &yShift, simx_opmode_streaming); // texture x shift
+		//	simxGetObjectFloatParameter(clientID, refHandle, 3012, &xScale, simx_opmode_streaming); // texture x shift
+		//	simxGetObjectFloatParameter(clientID, refHandle, 3013, &yScale, simx_opmode_streaming); // texture x shift
+
+		//	
+		//}
 };
 
 void vrep_mesh_object::getHandles() {
