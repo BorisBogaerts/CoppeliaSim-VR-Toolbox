@@ -97,9 +97,15 @@ void vrep_mesh_object::makeActor() {
 				tccoords->InsertNextTuple2(data[2 * i], data[2 * i + 1]);
 			}
 			meshData->GetPointData()->SetTCoords(tccoords);
+			tShift = vtkSmartPointer<vtkTransformTextureCoords>::New();
+			tShift->SetInputData(meshData);
+			tShift->SetPosition(0, 0, 0);
 			meshData->Modified();
-		vrep_mesh_actor->SetTexture(texture);
-		cout << "    Added texture to shape" << endl;
+			vrep_polyData_mapper->SetInputConnection(tShift->GetOutputPort()); // overwrite polydata with polydata with shifted texture coords
+			vrep_mesh_actor->SetTexture(texture);
+			vrep_mesh_actor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
+			vrep_mesh_actor->GetProperty()->SetOpacity(vrep_mesh_opacity);
+			cout << "    Added texture to shape" << endl;
 	}
 	else {
 		vrep_mesh_actor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
@@ -132,15 +138,16 @@ void vrep_mesh_object::updatePosition() {
 		pose->RotateX(-90);
 		pose->Modified();
 
-		//if (texturedObject) {
-		//	simxFloat xShift, yShift, xScale, yScale;
-		//	simxGetObjectFloatParameter(clientID, refHandle, 3006, &xShift, simx_opmode_streaming); // texture x shift
-		//	simxGetObjectFloatParameter(clientID, refHandle, 3007, &yShift, simx_opmode_streaming); // texture x shift
-		//	simxGetObjectFloatParameter(clientID, refHandle, 3012, &xScale, simx_opmode_streaming); // texture x shift
-		//	simxGetObjectFloatParameter(clientID, refHandle, 3013, &yScale, simx_opmode_streaming); // texture x shift
+		if (texturedObject) {
+			simxFloat xShift, yShift;// , xScale, yScale;
+			simxGetObjectFloatParameter(clientID, vrep_mesh_handle, 3006, &xShift, simx_opmode_streaming); // texture x shift
+			simxGetObjectFloatParameter(clientID, vrep_mesh_handle, 3007, &yShift, simx_opmode_streaming); // texture x shift
+			//simxGetObjectFloatParameter(clientID, refHandle, 3012, &xScale, simx_opmode_streaming); // texture x shift
+			//simxGetObjectFloatParameter(clientID, refHandle, 3013, &yScale, simx_opmode_streaming); // texture x shift
 
-		//	
-		//}
+			tShift->SetPosition(xShift, yShift,0);
+			tShift->Modified();
+		}
 };
 
 void vrep_mesh_object::getHandles() {

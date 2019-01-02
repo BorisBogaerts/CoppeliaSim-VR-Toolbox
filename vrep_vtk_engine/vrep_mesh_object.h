@@ -43,6 +43,7 @@
 #include <vtkPolyData.h>
 #include <vtkOBJReader.h>
 #include <vtkPointData.h>
+#include <vtkTransformTextureCoords.h>
 
 #ifndef vrep_mesh_object_H
 #define vrep_mesh_object_H
@@ -79,7 +80,9 @@ protected:
 	vtkSmartPointer<vtkPolyData> meshData = vtkSmartPointer<vtkPolyData>::New();
 	vtkSmartPointer<vtkOpenGLPolyDataMapper> vrep_polyData_mapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
 	vtkSmartPointer<vtkActor> vrep_mesh_actor = vtkSmartPointer<vtkActor>::New();
+
 	vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
+	vtkSmartPointer<vtkTransformTextureCoords> tShift = nullptr;
 
 	float vrep_mesh_color[3];
 	float vrep_mesh_opacity;
