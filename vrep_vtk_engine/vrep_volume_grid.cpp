@@ -97,7 +97,6 @@ bool vrep_volume_grid::loadGrid() {
 	if (intData[0] == -1) {
 		return false;
 	}
-
 	simxCallScriptFunction(clientID, (simxChar*)"Field", sim_scripttype_childscript, (simxChar*)"getData"
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 
