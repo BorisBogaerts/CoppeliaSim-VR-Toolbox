@@ -30,29 +30,22 @@
 
 #include "extApi.h"
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
 #include "vrep_scene_content.h"
 #include "vrep_controlled_object.h"
-#include <vtkVersion.h>
 #include "vrep_volume_grid.h"
-#include "vr_renderwindow_support.h"
 #include "renderwindow_support.h"
-#include "stereoPanorama_renderwindow_support.h"
 // vr renderwindow
 
+using namespace std;
 int main()
 {
-//	 First make a connection to vrep
+	//	 First make a connection to vrep
 	int portNb = 19997;
 	int clientID = -1;
 	int clientID2 = -1;
 	int running = 0;
-	// Try to connect to V-REP
 
-	std::cout << vtkVersion::GetVTKSourceVersion() << std::endl;
-	cout << endl << "Trying to connect with V-REP ..." << endl;
+	cout << "Trying to connect with V-REP ..." << endl;
 	while (clientID == -1) {
 		Sleep(100);
 		clientID = simxStart((simxChar*)"127.0.0.1", portNb, true, true, -200000, 5);
@@ -68,10 +61,8 @@ int main()
 	while (true) {
 		// Wait until simulation gets activated
 		cout << "Wait for simulation start ..." << endl;
-
-		// Now add spectator camera
 		result = 8;
-		while ((result==8) || (running == 0)) {
+		while ((result == 8) || (running == 0)) {
 			result = simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"isRunning"
 				, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 			if (result != 8) {
@@ -81,6 +72,7 @@ int main()
 		}
 		cout << "Simulation started" << endl << endl;
 		int refHandle;
+
 		simxGetObjectHandle(clientID, (simxChar*)"HTC_VIVE", &refHandle, simx_opmode_blocking);
 		vrep_scene_content *scene = new vrep_scene_content(clientID, refHandle); // all geometry is relative to refference frame
 		scene->loadVolume();
@@ -88,7 +80,7 @@ int main()
 		scene->loadCams();
 		scene->connectCamsToVolume();
 		scene->checkMeasurementObject(); // if the volume is replaced by a mesh then we need to change a few things
-		vr_renderwindow_support *supp = new vr_renderwindow_support(clientID, refHandle, interactor);
+		renderwindow_support *supp = new renderwindow_support(clientID, refHandle, interactor);
 		supp->addVrepScene(scene);
 		supp->activate_interactor();
 		delete supp;

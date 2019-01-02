@@ -31,53 +31,63 @@
 #pragma once
 
 #include <vtkSmartPointer.h>
-#include <vtkWin32OpenGLRenderWindow.h>
-#include <vtkOpenGLRenderer.h>
 #include <vtkWin32RenderWindowInteractor.h>
+#include <vtkOpenGLRenderer.h>
+#include <vtkWin32OpenGLRenderWindow.h>
 #include <vtkOpenGLCamera.h>
 #include "vrep_scene_content.h"
-#include "vtkInteractorStyleTrackballCamera.h"
+#include "vrep_volume_grid.h"
+#include <vtkTransform.h>
+
+
 #include "vrep_volume_grid.h"
 #include <vtkVolume.h>
 #include "timerClass.h"
+#include "vrep_controlled_object.h"
+#include "pathObject.h"
+#include <vector>
 
-
-#ifndef renderwindow_support_H
-#define renderwindow_support_H
-
+#pragma once
 class renderwindow_support
 {
 public:
-	renderwindow_support(int cid) { this->setClientID(cid); };
-	renderwindow_support() {};
+	renderwindow_support(int cid, int ref, int interactor);
 	~renderwindow_support();
+
 	void addVrepScene(vrep_scene_content *vrepSceneIn);
 	void activate_interactor();
 	void updatePose();
 	void updateRender();
-	void setClientID(int cid) { clientID = cid; };
+	void setClientID(int cid, int interactor) { clientID = cid; useInteractor = (interactor == 0); };
+	vrep_scene_content * getVrepScene() { return vrepScene; };
+
 	void visionSensorThread();
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 
+
 	void syncData();
 
-	int countRender = 0;
-	int countVision = 0;
-
 	timerClass *chrono = new timerClass;
-private:
-	vrep_scene_content *vrepScene;
+protected:
+	vrep_scene_content * vrepScene;
 	int clientID;
 	int handle;
+
+	int refH;
 	int update = 10;
+	int useInteractor = true;
+	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();// = vtkSmartPointer<vtkOpenGLRenderer>::New();
+	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();// = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
+	vtkSmartPointer<vtkWin32RenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();// = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
+	vtkSmartPointer<vtkOpenGLCamera> vr_camera = vtkSmartPointer<vtkOpenGLCamera>::New();// = vtkSmartPointer<vtkOpenGLCamera>::New();
+	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();// = vtkSmartPointer<vtkTransform>::New();
 
-	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
-	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
-	vtkSmartPointer<vtkWin32RenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
-	vtkSmartPointer<vtkOpenGLCamera> vr_camera = vtkSmartPointer<vtkOpenGLCamera>::New();
+	vrep_volume_grid *grid;
+	pathObject *path;
 
+
+	float coverage = 0;
 	bool dataReady = false;
+	int textUpdateCounter = 0;
 };
-
-#endif

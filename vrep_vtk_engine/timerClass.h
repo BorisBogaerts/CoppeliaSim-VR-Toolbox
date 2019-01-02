@@ -43,7 +43,7 @@ public:
 	void increment2();
 	float *coverage;
 	std::string getText() { return text; };
-	float *scale;
+	float *scale = nullptr;
 private:
 	int counter = 0;
 	int countInterval = 20;
