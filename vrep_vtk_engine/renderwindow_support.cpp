@@ -148,6 +148,7 @@ void renderwindow_support::activate_interactor() {
 
 	// Classical vtk pipeline to set up renderwindow etc with extra options
 	renderer->SetActiveCamera(vr_camera);
+	
 	// Do some aestetic thingies
 	simxFloat *data;
 	simxInt dataLength;
@@ -214,3 +215,4 @@ void renderwindow_support::activate_interactor() {
 		}
 	}
 }
+

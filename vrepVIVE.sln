@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vrep_novr_window", "vrep_no
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "V-REP VR Interface", "V-REP VR Interface\V-REP VR Interface.vcxproj", "{C074DAF4-4896-44D3-A4C7-D3F07D033DAA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vrep_stereo_spherical", "vrep_stereo_spherical\vrep_stereo_spherical.vcxproj", "{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -84,6 +86,22 @@ Global
 		{C074DAF4-4896-44D3-A4C7-D3F07D033DAA}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{C074DAF4-4896-44D3-A4C7-D3F07D033DAA}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{C074DAF4-4896-44D3-A4C7-D3F07D033DAA}.RelWithDebInfo|x86.Build.0 = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Debug|x64.ActiveCfg = Debug|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Debug|x64.Build.0 = Debug|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Debug|x86.ActiveCfg = Debug|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Debug|x86.Build.0 = Debug|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x64.ActiveCfg = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x64.Build.0 = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x86.ActiveCfg = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x86.Build.0 = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x64.ActiveCfg = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x64.Build.0 = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x86.ActiveCfg = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x86.Build.0 = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.RelWithDebInfo|x64.ActiveCfg = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.RelWithDebInfo|x64.Build.0 = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.RelWithDebInfo|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

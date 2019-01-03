@@ -144,7 +144,7 @@ void vrep_mesh_object::updatePosition() {
 			simxGetObjectFloatParameter(clientID, vrep_mesh_handle, 3007, &yShift, simx_opmode_streaming); // texture x shift
 			//simxGetObjectFloatParameter(clientID, refHandle, 3012, &xScale, simx_opmode_streaming); // texture x shift
 			//simxGetObjectFloatParameter(clientID, refHandle, 3013, &yScale, simx_opmode_streaming); // texture x shift
-
+			//tShift->SetScale(1.0/xScale, 1.0/yScale, 1.0);
 			tShift->SetPosition(xShift, yShift,0);
 			tShift->Modified();
 		}

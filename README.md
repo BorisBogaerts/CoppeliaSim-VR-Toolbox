@@ -9,10 +9,10 @@ Some Youtube videos showing the interface in action:
 - https://www.youtube.com/watch?v=Dsh8oyN4sD0&t
 
 The interface has the following capabilities:
-- Read all renderable (importand) geometry from V-REP (colors, opacities and textures are also transfered)
-- Synchronize all poses in real time continuously
+- Read all renderable geometry from V-REP (colors, opacities and textures are also transfered)
+- Synchronize all poses in real time
 - Send the positions of controllers to V-REP
-- Send buttonpress events to V-REP as string signals
+- Send controller buttonpress events to V-REP as string signals
 
 # Installation (easy)
 Installation instructions are now also available on youtube: https://www.youtube.com/watch?v=_GXVdgihVgQ
