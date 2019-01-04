@@ -228,23 +228,16 @@ void stereoPanorama_renderwindow_support::addPlane() {
 
 	vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
 
-	planeMapper->AddShaderReplacement( // strategically replace a few lines of code in the fragment shader.
-		vtkShader::Fragment,
-		"//VTK::Normal::Impl",
-		true,
-		"//VTK::Normal::Impl\n"
-		"  if (tcoordVCVSOutput[1]>0.5){\n"
-		"  fragOutput0[0] = 0.5;\n" // the cosine of the angle between camera Z and triangle normal are stored in the red channel
-		"  fragOutput0[1] = 0;\n" // the distance of the measured point is stored in the green channel
-		"  fragOutput0[2] = 0;\n"
-		"  fragOutput0[3] = 1;\n  }else{\n"
-		"  fragOutput0[0] = 0;\n" // the cosine of the angle between camera Z and triangle normal are stored in the red channel
-		"  fragOutput0[1] = 0.5;\n" // the distance of the measured point is stored in the green channel
-		"  fragOutput0[2] = 0;\n"
-		"  fragOutput0[3] = 1;\n };\n"
-		"  return;\n",
-		false // we "hide" the quality value in the blue channel
-	);
+	// Load custom shader code as string
+	std::ifstream ifs("omnidirectional_shader.glsl");
+	std::string content((std::istreambuf_iterator<char>(ifs)),
+		(std::istreambuf_iterator<char>()));
+	std::string toInject;
+
+	toInject.append("//VTK::Normal::Impl\n"); // vtk wants this
+	toInject.append(content); // add shader code
+	toInject.append("  return;\n"); // escape from shader
+	planeMapper->AddShaderReplacement(vtkShader::Fragment,"//VTK::Normal::Impl", true, toInject, false); // inject custom shader code
 	// Now remove a bunch of stuff (we don't want lights for example to interfere with any
 	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Color::Dec", true, "", false); // Remove colors
 	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Light::Dec", true, "", false); // Remove lights
