@@ -60,28 +60,38 @@ public:
 		vtkEventDataDevice controller = edata->GetAsEventDataDevice3D()->GetDevice();
 		vtkEventDataAction action = edata->GetAsEventDataDevice3D()->GetAction();
 		if (controller == vtkEventDataDevice::LeftController) {
-			signalName = "LeftController";
+			signalName = "L_";
 		}
 		else if (controller == vtkEventDataDevice::RightController) {
-			signalName = "RightController";
+			signalName = "R_";
 		}
 
 		if (button == vtkEventDataDeviceInput::Trigger) {
-			signalName.append("Trigger");
-		}
-
-		else if (button == vtkEventDataDeviceInput::Grip) {
-			signalName.append("Grip");
-		}
-		else if (button == vtkEventDataDeviceInput::TrackPad) {
+			signalName.append("Trigger_");
+		}else if (button == vtkEventDataDeviceInput::Grip) {
+			signalName.append("Grip_");
+		}else if (button == vtkEventDataDeviceInput::TrackPad) {
 			trackpad = true;
-			signalName.append("TrackPadX");
+			signalName.append("TrackPad_");
+		}else if (button == vtkEventDataDeviceInput::Joystick) {
+			trackpad = true;
+			signalName.append("Joystick_");
+		}else if (button == vtkEventDataDeviceInput::ApplicationMenu) {
+			trackpad = true;
+			signalName.append("ApplicationMenu_");
 		}
 
 		if (action == vtkEventDataAction::Press) {
+			signalName.append("Press");
 			mode = 1;
-		}
-		else if (action == vtkEventDataAction::Release) {
+		}else if (action == vtkEventDataAction::Release) {
+			signalName.append("Press");
+			mode = 0;
+		}else if (action == vtkEventDataAction::Touch) {
+			signalName.append("Touch");
+			mode = 1;
+		}else if (action == vtkEventDataAction::Untouch) {
+			signalName.append("Touch");
 			mode = 0;
 		}
 

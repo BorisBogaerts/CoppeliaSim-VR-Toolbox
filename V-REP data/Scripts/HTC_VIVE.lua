@@ -185,12 +185,37 @@ end
 
 function sysCall_init()
     -- simRemoteApi.start(19999,1300,true) -- if using different port
-    sim.setIntegerSignal('LeftControllerTrigger',0) -- set up string signal to transfer button state
-    sim.setIntegerSignal('LeftControllerGrip',0)
-    sim.setIntegerSignal('LeftControllerTrackPadX',0)
-    sim.setIntegerSignal('RightControllerTrigger',0)
-    sim.setIntegerSignal('RightControllerGrip',0)
-    sim.setIntegerSignal('RightControllerTrackPadX',0)
+	
+	-- Initalize all possible signals
+    sim.setIntegerSignal('L_Trigger_Press',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Trigger_Press',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_Trigger_Touch',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Trigger_Touch',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_Grip_Press',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Grip_Press',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_Grip_Touch',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Grip_Touch',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_TrackPad_Press',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_TrackPad_Press',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_TrackPad_Touch',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_TrackPad_Touch',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_Joystick_Press',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Joystick_Press',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_Joystick_Touch',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_Joystick_Touch',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_ApplicationMenu_Press',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_ApplicationMenu_Press',0) -- set up string signal to transfer button state
+	
+	sim.setIntegerSignal('L_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
+	sim.setIntegerSignal('R_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
 	
 	-- see if interactor is active
 	h = sim.getObjectHandle('HTC_VIVE')
