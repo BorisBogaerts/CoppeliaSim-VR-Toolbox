@@ -89,6 +89,7 @@ public:
 	void transferVisionSensorData();
 	bool startVisionSensorThread() { return activeThread; };
 	vrep_volume_grid *vol = new vrep_volume_grid();
+	void dynamicLoad();
 protected:
 	int clientID;
 	int refHandle;

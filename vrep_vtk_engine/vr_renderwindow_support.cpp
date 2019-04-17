@@ -161,6 +161,7 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
 		renderer->AddActor(vrepScene->getActor(i));
 	}
+	lastObject = vrepScene->getNumActors();
 	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
 		renderer->AddActor(vrepScene->getPanelActor(i));
 	}
@@ -172,6 +173,23 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	else {
 		grid = nullptr;
 	}
+}
+
+void vr_renderwindow_support::dynamicAddObjects() {
+	int result;
+	simxGetIntegerSignal(clientID, "dynamic_load_request", &result, simx_opmode_streaming);
+	if (result == 0) {
+		return;
+	}
+	vrepScene->dynamicLoad();
+	for (int i = lastObject; i < vrepScene->getNumActors(); i++) {
+		vrepScene->getActor(i)->PickableOff();
+		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
+		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
+		renderer->AddActor(vrepScene->getActor(i));
+	}
+	lastObject = vrepScene->getNumActors();
+	simxSetIntegerSignal(clientID, "dynamic_load_request", 0, simx_opmode_oneshot);
 }
 
 void vr_renderwindow_support::updatePose() {
@@ -341,6 +359,7 @@ void vr_renderwindow_support::activate_interactor() {
 			vr_renderWindowInteractor->SetPhysicalScale(1);
 		}
 		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
+		dynamicAddObjects();
 		updateText();
 		path->update();
 		if (isReady()) {

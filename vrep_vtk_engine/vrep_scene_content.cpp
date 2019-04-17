@@ -57,10 +57,10 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 	int h = 0;
 	int clientID = 0;
 	// interpret extra instructions
-	vrepMeshContainer.reserve(200); // I do not know why, but this is necessary
+	vrepMeshContainer.reserve(2000); // I do not know why, but this is necessary
 
 	if (doubleScene) { 
-		vrepMeshContainer2.reserve(200); 
+		vrepMeshContainer2.reserve(2000);
 	};
 
 	// Get all the object handles that need to be loaded
@@ -93,6 +93,37 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 		}
 	}
 	cout << "Number of objects loaded : " << vrepMeshContainer.size() << endl;		
+}
+
+void vrep_scene_content::dynamicLoad() {
+	int v = 10;
+	int h = 0;
+	int clientID = 0;
+
+	// Get all the object handles that need to be loaded
+	int *handles;
+	int numHandles;
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getVisibleHandlesDynamic"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numHandles, &handles, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	// read geometry
+	int* han = new int[numHandles];
+	for (int i = 0; i < numHandles; i++) {
+		han[i] = handles[i];
+	}
+	for (int i = 0; i < numHandles; i++) {
+		vrep_mesh_reader temp;
+		vrep_mesh_object temp2;
+		temp.read_mesh(clientID, han[i], h, v);
+		if (v > 0) {
+			// Get data for vr 				
+			vrepMeshContainer.push_back(temp2);
+			vrepMeshContainer[vrepMeshContainer.size() - 1].extractDataFromReader(temp);
+			// General things
+			vrepMeshContainer[vrepMeshContainer.size() - 1].setClientID(clientID, refHandle);
+			vrepMeshContainer[vrepMeshContainer.size() - 1].setHandle(h);
+			vrepMeshContainer[vrepMeshContainer.size() - 1].makeActor();
+		}
+	}
 }
 
 void vrep_scene_content::activateNewConnection() {

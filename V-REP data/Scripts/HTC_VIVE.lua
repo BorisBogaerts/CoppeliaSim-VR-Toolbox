@@ -41,6 +41,8 @@ getVisibleHandles = function(inInts, inFloats, inStrings, inBuffer)
 			end
 		end
 	end
+	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
+	numberOfObjects = #handles
 	return ret, {}, {}, ''
 end
 
@@ -168,18 +170,33 @@ function getEstetics(inInts, inFloats, inStrings, inBuffer)
 end
 
 function sysCall_sensing() -- example of something to do with the buttonpress events
-    if (hDum==nil) then
+	if (numberOfObjects==nil) or (dynamicLoading==false) then
 		return
 	end
-	state = sim.getIntegerSignal('RightControllerGrip')==1
-	if (state and (attatched==false) and (prevState==false))  then
-		sim.setObjectParent(hDum,ch,true)
-		attatched = true
-	elseif (state and (attatched==true) and (prevState==false)) then
-		sim.setObjectParent(hDum,-1,true)
-		attatched = false
+    handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
+	if(numberOfObjects<#handles) then
+		sim.setIntegerSignal('dynamic_load_request',1)
+		print("New Object created with name" .. sim.getObjectName(handles[numberOfObjects+1]) )
+		
 	end
-	prevState = sim.getIntegerSignal('RightControllerGrip')==1
+end
+
+getVisibleHandlesDynamic = function(inInts, inFloats, inStrings, inBuffer)
+	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
+	ret = {}
+	for i = numberOfObjects, #handles, 1 do
+		property=sim.getObjectSpecialProperty(handles[i])
+        val = sim.boolAnd32(property, sim.objectspecialproperty_renderable)
+		if val>0 then
+			simpleShapeHandles=sim.ungroupShape(handles[i])
+			for ii = 1, #simpleShapeHandles, 1 do
+				ret[#ret+1] = simpleShapeHandles[ii]
+			end
+		end
+	end
+	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
+	numberOfObjects = #handles
+	return ret, {}, {}, ''
 end
 
 
@@ -216,20 +233,10 @@ function sysCall_init()
 	
 	sim.setIntegerSignal('L_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
 	sim.setIntegerSignal('R_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
-	
-	-- see if interactor is active
-	h = sim.getObjectHandle('HTC_VIVE')
-	ch = sim.getObjectHandle('Controller1')
-    name = sim.getScriptSimulationParameter(sim.handle_self, "dummy_child_interactor")
-	local savedState=simGetInt32Parameter(sim_intparam_error_report_mode)
-    simSetInt32Parameter(sim_intparam_error_report_mode,0) -- we want none of them errors if object does not exist
-	hDum = nil
-	hDum = sim.getObjectHandle(name)
-	simSetInt32Parameter(sim_intparam_error_report_mode,savedState)
-	attatched = false
-	if (hDum<1) then
-		print("Invalid dummy name (standard interactor is disabled)")
-		hDum = nil
+	dynamicLoading = false
+	if (sim.getScriptSimulationParameter(sim.handle_self, "Enable_dynamic_objects_loading")==true) then
+		dynamicLoading = true
+		print("Dynamic object loading is activated")
 	end
-	prevState = (sim.getIntegerSignal('RightControllerGrip')==1)
+	sim.setIntegerSignal('dynamic_load_request',0)
 end

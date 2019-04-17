@@ -58,7 +58,7 @@ public:
 	void updateRender();
 	void setClientID(int cid, int interactor) { clientID = cid; useInteractor = (interactor == 0); };
 	vrep_scene_content * getVrepScene() { return vrepScene; };
-	
+	void dynamicAddObjects();
 	void visionSensorThread();
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
@@ -67,6 +67,7 @@ public:
 	void syncData();
 	void discoverDevices();
 	void synchronizeDevices();
+
 
 	void updateText();
 	timerClass *chrono = new timerClass;
@@ -78,6 +79,7 @@ protected:
 	int refH;
 	int update = 10;
 	int useInteractor = true;
+	int lastObject = 0;
 	vtkSmartPointer<vtkOpenVRRenderer> renderer = vtkSmartPointer<vtkOpenVRRenderer>::New();
 	vtkSmartPointer<vtkOpenVRRenderWindow> renderWindow = vtkSmartPointer<vtkOpenVRRenderWindow>::New();
 	vtkSmartPointer<vtkOpenVRRenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkOpenVRRenderWindowInteractor>::New();
