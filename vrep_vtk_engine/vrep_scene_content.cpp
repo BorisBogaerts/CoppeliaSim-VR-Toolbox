@@ -62,11 +62,21 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 	if (doubleScene) { 
 		vrepMeshContainer2.reserve(200); 
 	};
+
+	// Get all the object handles that need to be loaded
+	int *handles;
+	int numHandles;
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getVisibleHandles"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numHandles, &handles, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 	// read geometry
-	while (v > 0) { 
+	int* han = new int[numHandles];
+	for (int i = 0; i < numHandles; i++) {
+		han[i] = handles[i];
+	}
+	for (int i = 0; i < numHandles; i++) {
 		vrep_mesh_reader temp;
 		vrep_mesh_object temp2;
-		counter = temp.read_mesh(clientID, counter, h, v);
+		temp.read_mesh(clientID, han[i], h, v);
 		if (v > 0) {
 			// Get data for vr 				
 			vrepMeshContainer.push_back(temp2);

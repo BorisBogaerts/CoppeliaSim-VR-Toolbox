@@ -28,67 +28,68 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 -- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-getNextGeometryInformation = function(inInts,inFloats,inStrings,inBuffer)
-    local shapeIndex = inInts[1]
-    local size = {0,0,0,-1}
-    local returnValues = {}
-     while (true) do
-        h=sim.getObjects(shapeIndex,sim.object_shape_type)
-        if (h<0) then
-            break
-        elseif (h==-1) then
-            break
-        end
-        
-        property=sim.getObjectSpecialProperty(h)
+getVisibleHandles = function(inInts, inFloats, inStrings, inBuffer)
+	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
+	ret = {}
+	for i = 1, #handles, 1 do
+		property=sim.getObjectSpecialProperty(handles[i])
         val = sim.boolAnd32(property, sim.objectspecialproperty_renderable)
-        if val>0 then
-            vertices,indices=sim.getShapeMesh(h)
-            a=sim.getShapeViz(h,0)
-            size[1] = #vertices
-            size[2] = #indices
-            size[3] = shapeIndex+1
-            size[4] = h
-            if (a.texture==nil) then --two modes (1) no texture coordinates
-                size[5] = 0
-                for i = 1, #vertices, 1 do
-                    returnValues[#returnValues + 1] = vertices[i]
-                end
-                for i = 1, #indices, 1 do
-                    returnValues[#returnValues + 1] = indices[i]
-                end
-            else -- (2) with texture coordinates (basically duplicate vertices per triangle)
-                size[5] = 1
-                size[1] = #indices*3
-                for i = 1, #indices, 1 do
-                    val = ((indices[i])*3)
-                    returnValues[#returnValues + 1] = vertices[val+1]
-                    returnValues[#returnValues + 1] = vertices[val+2]
-                    returnValues[#returnValues + 1] = vertices[val+3]
-                end
-                for i = 1, #indices, 1 do
-                returnValues[#returnValues + 1] = i-1
-                end
-            end          
-            dump, color=sim.getShapeColor(h, nil ,sim.colorcomponent_ambient_diffuse)
-            for i = 1, 3, 1 do
-                returnValues[#returnValues + 1] = color[i]
-            end
-            dump, opacity=sim.getShapeColor(h, nil ,sim.colorcomponent_transparency)
-			
-			if (opacity[1]==0.5) then
-				returnValues[#returnValues + 1] = 1 -- opacity[1] -- (0.5 if not turned ON)
-			else
-				returnValues[#returnValues + 1] = opacity[1] -- (0.5 if not turned ON)
+		if val>0 then
+			simpleShapeHandles=sim.ungroupShape(handles[i])
+			for ii = 1, #simpleShapeHandles, 1 do
+				ret[#ret+1] = simpleShapeHandles[ii]
 			end
-            objectName=sim.getObjectName(h)
-            break
-        else
-            shapeIndex=shapeIndex+1
-        end
-     end
-    return size, returnValues, {objectName}, ''
+		end
+	end
+	return ret, {}, {}, ''
 end
+
+getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)
+	h = inInts[1]
+	local size = {0,0,0,-1}
+	local returnValues = {}
+	vertices,indices=sim.getShapeMesh(h)
+    a=sim.getShapeViz(h,0)
+    size[1] = #vertices
+    size[2] = #indices
+    size[3] = 0
+    size[4] = h
+    if (a.texture==nil) then --two modes (1) no texture coordinates
+        size[5] = 0
+        for i = 1, #vertices, 1 do
+            returnValues[#returnValues + 1] = vertices[i]
+        end
+        for i = 1, #indices, 1 do
+            returnValues[#returnValues + 1] = indices[i]
+        end
+    else -- (2) with texture coordinates (basically duplicate vertices per triangle)
+        size[5] = 1
+        size[1] = #indices*3
+        for i = 1, #indices, 1 do
+            val = ((indices[i])*3)
+            returnValues[#returnValues + 1] = vertices[val+1]
+            returnValues[#returnValues + 1] = vertices[val+2]
+            returnValues[#returnValues + 1] = vertices[val+3]
+        end
+        for i = 1, #indices, 1 do
+            returnValues[#returnValues + 1] = i-1
+        end
+    end          
+    dump, color=sim.getShapeColor(h, nil ,sim.colorcomponent_ambient_diffuse)
+    for i = 1, 3, 1 do
+        returnValues[#returnValues + 1] = color[i]
+    end
+    dump, opacity=sim.getShapeColor(h, nil ,sim.colorcomponent_transparency)
+	if (opacity[1]==0.5) then
+		returnValues[#returnValues + 1] = 1 -- opacity[1] -- (0.5 if not turned ON)
+	else
+		returnValues[#returnValues + 1] = opacity[1] -- (0.5 if not turned ON)
+	end
+    objectName=sim.getObjectName(h)
+	return size, returnValues, {objectName}, ''
+end
+
+
 
 getTextureInformation = function(inInts,inFloats,inStrings,inBuffer)
     a=sim.getShapeViz(inInts[1],0)

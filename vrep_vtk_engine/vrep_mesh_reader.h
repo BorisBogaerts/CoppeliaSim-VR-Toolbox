@@ -36,7 +36,7 @@
 class vrep_mesh_reader {
 public:
 	vrep_mesh_reader() { };
-	int read_mesh(int clientID, const int meshIndex, int &h, int &v);
+	int read_mesh(int clientID, int meshIndex, int &h, int &v);
 	vtkSmartPointer<vtkPolyData> getMeshData();
 	std::string getName() { return objectName; };
 	float color[3];

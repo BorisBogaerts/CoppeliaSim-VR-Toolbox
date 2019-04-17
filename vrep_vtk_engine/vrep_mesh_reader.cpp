@@ -38,14 +38,14 @@
 #include <vector>
 #include <vtkPointData.h>
 
-int vrep_mesh_reader::read_mesh(int clientID, const int meshIndex, int &h, int &v) {
+int vrep_mesh_reader::read_mesh(int clientID, int meshIndex, int &h, int &v) {
 	int *sizes;
 	int numVals;
 	simxFloat *data = new simxFloat[500000];
 	simxInt dataLength;
 	char* name;
 	simxInt nameLength;
-	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getNextGeometryInformation"
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getGeometryInformation"
 		, 1, &meshIndex, 0, NULL, 0, NULL, 0, NULL, &numVals,  &sizes, &dataLength, &data, &nameLength, &name, NULL, NULL, simx_opmode_blocking);
 
 	for (int i = 0; i < nameLength; i++) {
@@ -53,7 +53,7 @@ int vrep_mesh_reader::read_mesh(int clientID, const int meshIndex, int &h, int &
 	};
 
 	if (sizes[0] > 0) {
-		std::cout << "Loaded geometry nr" << sizes[2] << " with " << sizes[0]/3 << " vertices and " << sizes[1]/3 << " faces" << " vrep name : " << objectName << std::endl;
+		std::cout << "Loaded geometry with handle " << meshIndex << " with " << sizes[0]/3 << " vertices and " << sizes[1]/3 << " faces" << " vrep name : " << objectName << std::endl;
 	}
 	
 
