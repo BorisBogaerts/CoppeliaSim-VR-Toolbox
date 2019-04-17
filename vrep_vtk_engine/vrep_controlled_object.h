@@ -35,6 +35,7 @@
 #include <vtkOpenVRRenderWindow.h>
 #include <vtkOpenVRRenderWindowInteractor.h>
 #include <vtkOpenVRModel.h>
+#include <vtkOpenVRCamera.h>
 
 #pragma once
 class vrep_controlled_object
@@ -44,7 +45,7 @@ public:
 	~vrep_controlled_object();
 
 	void setName(std::string n);
-	void updatePosition(vtkSmartPointer<vtkOpenVRRenderWindow> rw, vtkSmartPointer<vtkOpenVRRenderWindowInteractor> rwi);
+	void updatePosition(vtkSmartPointer<vtkOpenVRRenderWindow> rw, vtkSmartPointer<vtkOpenVRRenderWindowInteractor> rwi, vtkSmartPointer<vtkOpenVRCamera> cam);
 	int getObjectHandle() { return objectHandle; };
 	void setDevice(vtkEventDataDevice dev) { device = dev; };
 protected:

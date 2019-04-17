@@ -201,7 +201,7 @@ function sysCall_sensing()
 	end
 	if(integrateMeasurement) then
 		--sim.setIntegerSignal('ResetMeasurement',0) -- set up string signal to transfer button state
-		sim.setIntegerSignal('MeasurementInProgress',sim.getIntegerSignal("RightControllerTrigger")) -- set up string signal to transfer button state
+		--sim.setIntegerSignal('MeasurementInProgress',sim.getIntegerSignal("RightControllerTrigger")) -- set up string signal to transfer button state
 		checkReset()
 		if (sim.getIntegerSignal("MeasurementInProgress")==0) then
 			return

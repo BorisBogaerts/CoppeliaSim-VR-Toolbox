@@ -38,7 +38,7 @@
 #include "vrep_scene_content.h"
 #include "vrep_volume_grid.h"
 #include <vtkTransform.h>
-
+#include <vtkTextureUnitManager.h>
 
 #include "vrep_volume_grid.h"
 #include <vtkVolume.h>
@@ -66,6 +66,9 @@ public:
 	void setNotReady() { dataReady = false; };
 	void addPlane();
 
+	void activateMainCam();
+	void activateHelpCam();
+
 	void syncData();
 
 	timerClass *chrono = new timerClass;
@@ -82,6 +85,13 @@ protected:
 	vtkSmartPointer<vtkWin32RenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();// = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
 	vtkSmartPointer<vtkOpenGLCamera> vr_camera = vtkSmartPointer<vtkOpenGLCamera>::New();// = vtkSmartPointer<vtkOpenGLCamera>::New();
 	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();// = vtkSmartPointer<vtkTransform>::New();
+
+
+	vtkSmartPointer<vtkOpenGLRenderer> subRenderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
+	vtkSmartPointer<vtkWin32OpenGLRenderWindow> subRenderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
+	vtkSmartPointer<vtkWin32RenderWindowInteractor> subRWI = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
+	vtkSmartPointer<vtkOpenGLCamera> subCam = vtkSmartPointer<vtkOpenGLCamera>::New();
+	vtkSmartPointer<vtkTransform> subCamPose = vtkSmartPointer<vtkTransform>::New();
 
 	vrep_volume_grid *grid;
 	pathObject *path;

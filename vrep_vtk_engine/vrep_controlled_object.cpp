@@ -51,25 +51,32 @@ void vrep_controlled_object::setName(std::string n) {
 	simxGetObjectHandle(clientID, name.c_str(), &objectHandle, simx_opmode_blocking);
 }
 
-void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindow> rw, vtkSmartPointer<vtkOpenVRRenderWindowInteractor> rwi) {
-	if (rw->GetTrackedDeviceModel(device) == nullptr) {  return; }
+void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindow> rw, vtkSmartPointer<vtkOpenVRRenderWindowInteractor> rwi, vtkSmartPointer<vtkOpenVRCamera> cam) {
 	vtkSmartPointer<vtkTransform> Tt = vtkSmartPointer<vtkTransform>::New();
-	double pos[3];
-	double wxyz[4];
-	double ppos[3];
-	double wdir[3];
 	Tt->PostMultiply();
-	vr::TrackedDevicePose_t& vrPose = rw->GetTrackedDevicePose(rw->GetTrackedDeviceIndexForDevice(device));
-	rwi->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
-	Tt->RotateWXYZ(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
-	Tt->Translate(pos);
+	double orr[4];
+	float pos2[3];
 
+	if (device == vtkEventDataDevice::HeadMountedDisplay) {
+		double *wxyz;
+		wxyz = cam->GetOrientationWXYZ();
+		Tt->RotateWXYZ(-wxyz[0], wxyz[1], wxyz[2], wxyz[3]); //fxcking -
+		Tt->Translate(cam->GetPosition());
+	}
+	else {
+		if (rw->GetTrackedDeviceModel(device) == nullptr) { return; }
+		double pos[3];
+		double ppos[3];
+		double wdir[3];
+		double wxyz[4];
+		vr::TrackedDevicePose_t& vrPose = rw->GetTrackedDevicePose(rw->GetTrackedDeviceIndexForDevice(device));
+		rwi->ConvertPoseToWorldCoordinates(vrPose, pos, wxyz, ppos, wdir);
+		Tt->RotateWXYZ(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
+		Tt->Translate(pos);
+	}
 	using ::Eigen::AngleAxisd;
 	using ::Eigen::Matrix3d;
 	using ::Eigen::Vector3d;
-
-	double orr[4];
-	float pos2[3];
 
 	Tt->RotateX(90);
 	Tt->GetPosition(pos2);
@@ -82,6 +89,8 @@ void vrep_controlled_object::updatePosition(vtkSmartPointer<vtkOpenVRRenderWindo
 
 	textra->Concatenate(Tt);
 	textra->GetOrientationWXYZ(orr);
+
+	
 	double orrt[3];
 	for (int i = 1; i < 4; i++) {
 		orrt[i - 1] = orr[i];

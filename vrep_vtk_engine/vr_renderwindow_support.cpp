@@ -50,7 +50,7 @@ class eventCatcher : public vtkOpenVRInteractorStyle
 {
 public:
 	eventCatcher() {
-		SetDollyMotionFactor(10.0);
+		//SetDollyMotionFactor(10.0);
 	}
 	void OnButton3D(vtkEventData *edata) {
 		int mode;
@@ -191,27 +191,29 @@ void vr_renderwindow_support::discoverDevices() {
 	headset_vrep = new vrep_controlled_object(clientID, refH);
 	
 	headset_vrep->setName("Headset");
-	headset_vrep->setDevice(vtkEventDataDevice::HeadMountedDisplay);		
+	headset_vrep->setDevice(vtkEventDataDevice::HeadMountedDisplay);
 
 	controller1_vrep->setName("Controller1");
 	controller1_vrep->setDevice(vtkEventDataDevice::RightController);
 		
 	controller2_vrep->setName("Controller2");
 	controller2_vrep->setDevice(vtkEventDataDevice::LeftController);
-
+	//cout << "Number of devices : " << (int)vtkEventDataDevice::NumberOfDevices << endl;
 	//vtkSmartPointer<vtkOpenVRModel> temp;
+	//vr::IVRRenderModels* test = renderWindow->GetOpenVRRenderModels();
+	////test->
 	//for (int i = 1; i < 10; i++) {
-	//	temp = renderWindow->GetTrackedDeviceModel(i);
+	//	temp = renderWindow->GetTrackedDeviceModel((vr::TrackedDeviceIndex_t)i);
 	//	if (temp != nullptr) {
-	//		cout << temp->GetName() << endl;
+	//		cout << << endl;
 	//	}
 	//}
 }
 
 void vr_renderwindow_support::synchronizeDevices() {
-	headset_vrep->updatePosition(renderWindow, vr_renderWindowInteractor);
-	controller1_vrep->updatePosition(renderWindow, vr_renderWindowInteractor);
-	controller2_vrep->updatePosition(renderWindow, vr_renderWindowInteractor);
+	headset_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
+	controller1_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
+	controller2_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
 }
 
 void vr_renderwindow_support::updateText() {

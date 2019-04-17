@@ -79,6 +79,7 @@ stereoPanorama_renderwindow_support::~stereoPanorama_renderwindow_support()
 
 void stereoPanorama_renderwindow_support::updateRender() {
 	vr_renderWindowInteractor->Render();
+	subRWI->Render();
 };
 
 
@@ -86,25 +87,23 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 	vrepScene = vrepSceneIn;
 
 	vrepScene->vrep_get_object_pose();
-	//for (int i = 0; i < 1; i++) { //vrepScene->getNumActors()
-	//	vrepScene->getActor(i)->PickableOff();
-	//	vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
-	//	vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
-	//	renderer->AddActor(vrepScene->getActor(i));
-	//}
-	////for (int i = 0; i < vrepScene->getNumRenders(); i++) {
-	////	for (int j = 0; j < renderer.size(); j++) {
-	////		renderer[j]->AddActor(vrepScene->getPanelActor(i));
-	////	}
-	////}
-	//if (vrepScene->isVolumePresent()) {
-	//	renderer->AddViewProp(vrepScene->getVolume());
-	//	grid = vrepScene->vol;
-	//	//renderer->ResetCamera();
-	//}
-	//else {
-	//	grid = nullptr;
-	//}
+	for (int i = 0; i < 1; i++) { //vrepScene->getNumActors()
+		vrepScene->getActor(i)->PickableOff();
+		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
+		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
+		subRenderer->AddActor(vrepScene->getActor(i));
+	}
+	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
+		subRenderer->AddActor(vrepScene->getPanelActor(i));
+	}
+	if (vrepScene->isVolumePresent()) {
+		subRenderer->AddViewProp(vrepScene->getVolume());
+		grid = vrepScene->vol;
+		//renderer->ResetCamera();
+	}
+	else {
+		grid = nullptr;
+	}
 	grid = nullptr;
 }
 
@@ -116,18 +115,18 @@ void stereoPanorama_renderwindow_support::updatePose() {
 
 	simxGetObjectOrientation(clientID, handle, refH, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
 	simxGetObjectPosition(clientID, handle, refH, position, simx_opmode_streaming);
-	pose->PostMultiply();
-	pose->Identity();
-	pose->RotateZ((eulerAngles[2] * 180 / 3.1415));
-	pose->RotateY((eulerAngles[1] * 180 / 3.1415));
-	pose->RotateX((eulerAngles[0] * 180 / 3.1415));
+	subCamPose->PostMultiply();
+	subCamPose->Identity();
+	subCamPose->RotateZ((eulerAngles[2] * 180 / 3.1415));
+	subCamPose->RotateY((eulerAngles[1] * 180 / 3.1415));
+	subCamPose->RotateX((eulerAngles[0] * 180 / 3.1415));
 
-	pose->Translate(position);
-	pose->RotateX(-90);
-	pose->Inverse();
-	pose->Modified();
-	vr_camera->SetModelTransformMatrix(pose->GetMatrix());
-	vr_camera->Modified();
+	subCamPose->Translate(position);
+	subCamPose->RotateX(-90);
+	subCamPose->Inverse();
+	subCamPose->Modified();
+	subCam->SetModelTransformMatrix(subCamPose->GetMatrix());
+	subCam->Modified();
 }
 
 void stereoPanorama_renderwindow_support::syncData() {
@@ -153,38 +152,12 @@ void stereoPanorama_renderwindow_support::visionSensorThread() {
 void stereoPanorama_renderwindow_support::activate_interactor() {
 	vrepScene->vrep_get_object_pose();
 
-	vr_camera->SetViewAngle(90.0);
-	vr_camera->SetPosition(0, 0, 0);
-	vr_camera->SetFocalPoint(0, 0, 1);
-	vr_camera->SetViewUp(0, 1, 0);
-
-	// Classical vtk pipeline to set up renderwindow etc with extra options
-	renderer->SetActiveCamera(vr_camera);
-	addPlane(); // Used to obtain pixel coordinate in shader
-	renderer->UseShadowsOff();
-	renderer->Modified();
-
-	renderWindow->AddRenderer(renderer);
-	renderWindow->SetDesiredUpdateRate(90.0);
-	renderWindow->SetSize(512, 512);
-	renderWindow->Initialize();
-	vr_renderWindowInteractor->SetRenderWindow(renderWindow);
-	vr_renderWindowInteractor->Initialize();
-
+	activateMainCam(); // shader that combines images
+	activateHelpCam(); // individual renders
 
 	if ((grid != nullptr) && (vrepScene->isVolumePresent())) {
 		cout << "Volume detected and connected" << endl;
 	}
-
-	cout << "Everithing loaded succesfully" << endl;
-
-
-	// Search for dynamic path object
-	path = new pathObject(clientID);
-	renderer->AddActor(path->getActor());
-	renderer->Modified();
-
-
 
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
@@ -214,8 +187,67 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 	}
 }
 
+void stereoPanorama_renderwindow_support::activateMainCam() {
+	vr_camera->SetViewAngle(90.0);
+	vr_camera->SetPosition(0, 0, 0);
+	vr_camera->SetFocalPoint(0, 0, 1);
+	vr_camera->SetViewUp(0, 1, 0);
+
+	// Classical vtk pipeline to set up renderwindow etc with extra options
+	renderer->SetActiveCamera(vr_camera);
+	addPlane(); // Used to obtain pixel coordinate in shader
+	renderer->UseShadowsOff();
+	renderer->Modified();
+
+	renderWindow->AddRenderer(renderer);
+	renderWindow->SetDesiredUpdateRate(90.0);
+	renderWindow->SetSize(512, 512);
+	renderWindow->Initialize();
+	vr_renderWindowInteractor->SetRenderWindow(renderWindow);
+	vr_renderWindowInteractor->Initialize();
+}
+
+void stereoPanorama_renderwindow_support::activateHelpCam() {
+	subCam->SetViewAngle(90.0);
+	subCam->SetModelTransformMatrix(subCamPose->GetMatrix());
+	subCam->SetPosition(0, 0, 0);
+	subCam->SetFocalPoint(0, 0, 1);
+	subCam->SetViewUp(0, 1, 0);
+
+	// Classical vtk pipeline to set up renderwindow etc with extra options
+	subRenderer->SetActiveCamera(subCam);
+
+	subRenderer->SetBackground(1.0,1.0,1.0);
+	
+	subRenderer->AutomaticLightCreationOn();
+	subRenderer->SetAutomaticLightCreation(true);
+	subRenderer->LightFollowCameraOn();
+	subRenderer->UseShadowsOff();
+	subRenderer->Modified();
+
+	subRenderWindow->AddRenderer(subRenderer);
+	subRenderWindow->SetDesiredUpdateRate(90.0);
+	subRenderWindow->SetSize(1024, 1024);
+	subRenderWindow->SetOffScreenRendering(true);
+	subRenderWindow->Initialize();
+	subRWI->SetRenderWindow(subRenderWindow);
+	subRWI->Initialize();
+
+
+	if ((grid != nullptr) && (vrepScene->isVolumePresent())) {
+		cout << "Volume detected and connected" << endl;
+	}
+	cout << "Everithing loaded succesfully" << endl;
+
+	// Search for dynamic path object
+	path = new pathObject(clientID);
+	subRenderer->AddActor(path->getActor());
+	subRenderer->Modified();
+
+}
 
 void stereoPanorama_renderwindow_support::addPlane() {
+	
 	vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
 	plane->SetCenter(0.0, 0.0, 0.5);
 	plane->SetNormal(0.0, 0.0, 1.0);
@@ -256,6 +288,8 @@ void stereoPanorama_renderwindow_support::addPlane() {
 	image->SetDimensions(1, 1, 1);
 	image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
 	texture->SetInputData(image);
+
+	//planeMapper->MapDataArrayToMultiTextureAttribute()
 	vtkSmartPointer<vtkActor> texturedPlane = vtkSmartPointer<vtkActor>::New();
 	texturedPlane->SetMapper(planeMapper);
 	texturedPlane->SetTexture(texture);
