@@ -176,8 +176,6 @@ function sysCall_sensing() -- example of something to do with the buttonpress ev
     handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
 	if(numberOfObjects<#handles) then
 		sim.setIntegerSignal('dynamic_load_request',1)
-		print("New Object created with name" .. sim.getObjectName(handles[numberOfObjects+1]) )
-		
 	end
 end
 
@@ -233,6 +231,22 @@ function sysCall_init()
 	
 	sim.setIntegerSignal('L_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
 	sim.setIntegerSignal('R_ApplicationMenu_Touch',0) -- set up string signal to transfer button state
+	
+	-- Now some extra signals
+	sim.setFloatSignal('L_Trackpad_pos_x',0) -- trackpad
+	sim.setFloatSignal('L_Trackpad_pos_y',0)
+	sim.setFloatSignal('L_Trackpad_pos_z',0)
+	sim.setFloatSignal('R_Trackpad_pos_x',0)
+	sim.setFloatSignal('R_Trackpad_pos_y',0)
+	sim.setFloatSignal('R_Trackpad_pos_z',0)
+	
+	sim.setFloatSignal('L_Joystick_pos_x',0) -- joystick, whatever this might be
+	sim.setFloatSignal('L_Joystick_pos_y',0)
+	sim.setFloatSignal('L_Joystick_pos_z',0)
+	sim.setFloatSignal('R_Joystick_pos_x',0)
+	sim.setFloatSignal('R_Joystick_pos_y',0)
+	sim.setFloatSignal('R_Joystick_pos_z',0)
+	
 	dynamicLoading = false
 	if (sim.getScriptSimulationParameter(sim.handle_self, "Enable_dynamic_objects_loading")==true) then
 		dynamicLoading = true

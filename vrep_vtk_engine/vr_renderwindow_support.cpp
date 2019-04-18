@@ -59,11 +59,14 @@ public:
 		vtkEventDataDeviceInput button = edata->GetAsEventDataDevice3D()->GetInput();
 		vtkEventDataDevice controller = edata->GetAsEventDataDevice3D()->GetDevice();
 		vtkEventDataAction action = edata->GetAsEventDataDevice3D()->GetAction();
+		bool left = false;
 		if (controller == vtkEventDataDevice::LeftController) {
 			signalName = "L_";
+			left = true;
 		}
 		else if (controller == vtkEventDataDevice::RightController) {
 			signalName = "R_";
+			left = false;
 		}
 
 		if (button == vtkEventDataDeviceInput::Trigger) {
@@ -73,9 +76,39 @@ public:
 		}else if (button == vtkEventDataDeviceInput::TrackPad) {
 			trackpad = true;
 			signalName.append("TrackPad_");
+			vtkOpenVRRenderWindowInteractor* rw = vtkOpenVRRenderWindowInteractor::SafeDownCast(this->Interactor); // get renderwindowinteractor
+			float res[3];
+			if (left) {
+				rw->GetTouchPadPosition(vtkEventDataDevice::LeftController, vtkEventDataDeviceInput::TrackPad, res);
+				simxSetFloatSignal(clientID, "L_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+				simxSetFloatSignal(clientID, "L_Trackpad_pos_y", res[1], simx_opmode_oneshot);
+				simxSetFloatSignal(clientID, "L_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
+			}
+			else {
+				rw->GetTouchPadPosition(vtkEventDataDevice::RightController, vtkEventDataDeviceInput::TrackPad, res);
+				simxSetFloatSignal(clientID, "R_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+				simxSetFloatSignal(clientID, "R_Trackpad_pos_y", res[1], simx_opmode_oneshot);
+				simxSetFloatSignal(clientID, "R_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
+			}
+			
 		}else if (button == vtkEventDataDeviceInput::Joystick) {
 			trackpad = true;
 			signalName.append("Joystick_");
+			vtkOpenVRRenderWindowInteractor* rw = vtkOpenVRRenderWindowInteractor::SafeDownCast(this->Interactor); // get renderwindowinteractor
+			float res[3];
+			if (left) {
+				rw->GetTouchPadPosition(vtkEventDataDevice::LeftController, vtkEventDataDeviceInput::Joystick, res);
+				simxSetFloatSignal(clientID, "L_Joystick_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+				simxSetFloatSignal(clientID, "L_Joystick_pos_y", res[1], simx_opmode_oneshot);
+				simxSetFloatSignal(clientID, "L_Joystick_pos_z", res[2], simx_opmode_oneshot); // whatever this is
+			}
+			else {
+				rw->GetTouchPadPosition(vtkEventDataDevice::RightController, vtkEventDataDeviceInput::Joystick, res);
+				simxSetFloatSignal(clientID, "R_Joystick_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+				simxSetFloatSignal(clientID, "R_Joystick_pos_y", res[1], simx_opmode_oneshot);
+				simxSetFloatSignal(clientID, "R_Joystick_pos_z", res[2], simx_opmode_oneshot); // whatever this is
+			}
+
 		}else if (button == vtkEventDataDeviceInput::ApplicationMenu) {
 			trackpad = true;
 			signalName.append("ApplicationMenu_");
@@ -221,10 +254,10 @@ void vr_renderwindow_support::discoverDevices() {
 	headset_vrep->setName("Headset");
 	headset_vrep->setDevice(vtkEventDataDevice::HeadMountedDisplay);
 
-	controller1_vrep->setName("Controller1");
+	controller1_vrep->setName("RightController");
 	controller1_vrep->setDevice(vtkEventDataDevice::RightController);
 		
-	controller2_vrep->setName("Controller2");
+	controller2_vrep->setName("LeftController");
 	controller2_vrep->setDevice(vtkEventDataDevice::LeftController);
 	//cout << "Number of devices : " << (int)vtkEventDataDevice::NumberOfDevices << endl;
 	//vtkSmartPointer<vtkOpenVRModel> temp;
