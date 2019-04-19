@@ -107,7 +107,31 @@ getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)
 	return size, returnValues, {objectName}, ''
 end
 
-
+function getLightInfo(inInts,inFloats,inStrings,inBuffer)
+	handles = simGetObjectsInTree(sim_handle_scene, sim.object_light_type, 0)
+	inInts = {#handles}
+	returnValues = {}
+	for i = 1, #handles, 1 do
+		pos = sim.getObjectPosition(handles[i], -1)
+		returnValues[#returnValues + 1] = pos[1]
+		returnValues[#returnValues + 1] = pos[2]
+		returnValues[#returnValues + 1] = pos[3]
+		
+		pos = sim.getObjectOrientation(handles[i], -1)
+		returnValues[#returnValues + 1] = pos[1]
+		returnValues[#returnValues + 1] = pos[2]
+		returnValues[#returnValues + 1] = pos[3]
+		
+		dimp, dump2, c1, c2 = sim.getLightParameters(handles[i])
+		returnValues[#returnValues + 1] = c1[1]
+		returnValues[#returnValues + 1] = c1[2]
+		returnValues[#returnValues + 1] = c1[3]
+		returnValues[#returnValues + 1] = c2[1]
+		returnValues[#returnValues + 1] = c2[2]
+		returnValues[#returnValues + 1] = c2[3]
+	end
+	return inInts, returnValues, {}, ''
+end
 
 getTextureInformation = function(inInts,inFloats,inStrings,inBuffer)
     a=sim.getShapeViz(inInts[1],0)
@@ -211,6 +235,7 @@ doWeHaveManu = function(inInts, inFloats, inStrings, inBuffer)
 	h[1] = sim.getObjectHandle('Menu@silentError')
 	return h, {}, {}, ''
 end
+
 
 function sysCall_init()
     -- simRemoteApi.start(19999,1300,true) -- if using different port

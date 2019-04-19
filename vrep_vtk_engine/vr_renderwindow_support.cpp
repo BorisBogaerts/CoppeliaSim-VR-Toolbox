@@ -41,9 +41,6 @@
 #include <vtkOpenVRInteractorStyle.h>
 #include <vtkOpenVRModel.h>
 
-#include <thread>
-#include <chrono>
-
 #include <vtkOpenVRMenuWidget.h>
 #include <vtkOpenVRMenuRepresentation.h>
 #include <vtkCommand.h>
@@ -142,6 +139,7 @@ public:
 protected:
 };
 
+// This one is a handle function for the vision sensor thread
 void handleFunc(vr_renderwindow_support *sup) {
 	cout << "Vision sensor thread activated" << endl;
 	sup->visionSensorThread();
@@ -187,8 +185,9 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	vrepScene->vrep_get_object_pose();
 	for (int i = 0; i < vrepScene->getNumActors(); i++) {
 		vrepScene->getActor(i)->PickableOff();
-		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
-		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
+		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.6);
+		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.2);
+		vrepScene->getActor(i)->GetProperty()->SetSpecular(0.2);
 		renderer->AddActor(vrepScene->getActor(i));
 	}
 	lastObject = vrepScene->getNumActors();
@@ -205,6 +204,37 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	}
 }
 
+void vr_renderwindow_support::readLights() {
+	simxInt *dataInt;
+	simxFloat *dataFloat;
+	simxInt dataFloatLength;
+	simxInt dataIntLength;
+
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getLightInfo"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataIntLength, &dataInt, &dataFloatLength, &dataFloat, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	vtkSmartPointer<vtkLight> light;
+	vtkSmartPointer<vtkTransform> tform;
+	for (int i = 0; i < dataInt[0]; i++) {
+		light = vtkSmartPointer<vtkLight>::New();
+		tform = vtkSmartPointer<vtkTransform>::New();
+
+		tform->PostMultiply();
+		tform->Identity();
+		tform->RotateZ((dataFloat[(i * 12) + 5] * 180 / 3.1415));
+		tform->RotateY((dataFloat[(i * 12) + 4] * 180 / 3.1415));
+		tform->RotateX((dataFloat[(i * 12) + 3] * 180 / 3.1415));
+		tform->Translate(dataFloat[(i * 12)], dataFloat[(i * 12) + 1], dataFloat[(i * 12) + 2]);
+		tform->RotateX(-90);
+		tform->Modified();
+		light->SetPosition(0, 0, 0);
+		light->SetFocalPoint(0, 0, 1);
+
+		light->SetDiffuseColor(dataFloat[(i * 12) + 6], dataFloat[(i * 12) + 7], dataFloat[(i * 12) + 8]);
+		light->SetSpecularColor(dataFloat[(i * 12) + 9], dataFloat[(i * 12) + 10], dataFloat[(i * 12) + 11]);
+		light->SetTransformMatrix(tform->GetMatrix());
+		renderer->AddLight(light);
+	}
+}
 void vr_renderwindow_support::dynamicAddObjects() {
 	int result;
 	simxGetIntegerSignal(clientID, "dynamic_load_request", &result, simx_opmode_streaming);
@@ -232,8 +262,9 @@ void vr_renderwindow_support::syncData() {
 }
 
 void vr_renderwindow_support::visionSensorThread() {
+	
 	vrepScene->activateNewConnection(); // connect to vrep with a new port
-	while (true) {
+	while (busy) {
 		vrepScene->updateVisionSensorObjectPose();
 		coverage = vrepScene->updateVisionSensorRender();
 		dataReady = true;
@@ -394,12 +425,12 @@ void vr_renderwindow_support::activate_interactor() {
 		renderer->SetGradientBackground(true);
 	}
 
-	renderer->AutomaticLightCreationOn();
 	renderer->SetAutomaticLightCreation(true);
-	renderer->LightFollowCameraOn();
-	renderer->UseShadowsOff();
+	renderer->LightFollowCameraOff();
+	//renderer->ligt
+	readLights();
+	//renderer->UseShadowsOff();
 	renderer->Modified();
-
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetMultiSamples(0);
 	renderWindow->SetDesiredUpdateRate(90.0);
@@ -451,8 +482,11 @@ void vr_renderwindow_support::activate_interactor() {
 	
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
+	bool threadActivated = false;
 	if (vrepScene->startVisionSensorThread()) {
+		busy = true;
 		camThread = std::thread(handleFunc, this);
+		threadActivated = true;
 	}else{
 		camThread.~thread();
 	}
@@ -482,8 +516,13 @@ void vr_renderwindow_support::activate_interactor() {
 		}
 		
 		if (simxGetLastCmdTime(clientID) <= 0) {
+			busy = false;
 			vr_renderWindowInteractor->TerminateApp(); // stop if the v-rep simulation is not running
-			camThread.~thread();
+			if (threadActivated) {
+				camThread.join();
+				camThread.~thread();
+			}
+			cout << endl << endl << endl;
 			return;
 		}
 	}

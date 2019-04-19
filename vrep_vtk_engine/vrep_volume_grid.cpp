@@ -202,10 +202,8 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 	//mapper->SetRequestedRenderModeToGPU();
 	volume->SetMapper(mapper);
 	mapper->SetLockSampleDistanceToInputSpacing(true);
-	//mapper->SetAutoAdjustSampleDistances(true);
-	//mapper->SetSampleDistance(0.1);
+	mapper->UseJitteringOn();
 	mapper->SetBlendModeToComposite();
-	
 	setColorMap(2);
 	volume->SetUserTransform(pose);
 	

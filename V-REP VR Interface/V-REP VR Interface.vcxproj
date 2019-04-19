@@ -131,11 +131,17 @@
   <ItemGroup>
     <ClInclude Include="..\extApi.h" />
     <ClInclude Include="..\extApiPlatform.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
+    <ClInclude Include="resource2.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\vrep_vtk_engine\vrep_vtk_engine.vcxproj">
       <Project>{57bb491f-8116-44d8-88f0-fee9065cfc45}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="V-REP VR Interface.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -44,6 +44,10 @@
 #include "pathObject.h"
 #include <vtkVectorText.h>
 #include <vtkLinearExtrusionFilter.h>
+
+#include <thread>
+#include <atomic>
+#include <chrono>
 #pragma once
 class vr_renderwindow_support
 {
@@ -63,7 +67,7 @@ public:
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 
-	
+	void readLights();
 	void syncData();
 	void discoverDevices();
 	void synchronizeDevices();
@@ -98,6 +102,7 @@ protected:
 	vtkSmartPointer<vtkActor> txtActor = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkTransform> Tt = vtkSmartPointer<vtkTransform>::New();
 
+	std::atomic<bool> busy = true;
 	bool screenCamInUse = false;
 	float coverage = 0;
 	float scale = 1;
