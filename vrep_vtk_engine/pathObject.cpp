@@ -41,10 +41,10 @@ pathObject::pathObject(int ID)
 	simxInt *data;
 	simxInt dataLength;
 	simxInt result;
-	result = simxCallScriptFunction(clientID, (simxChar*)"Camera_feeder", sim_scripttype_childscript, (simxChar*)"helloPath"
-		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
-	if (result == 0) {
-		if (data[0] == 1) {
+	//result = simxCallScriptFunction(clientID, (simxChar*)"Camera_feeder", sim_scripttype_childscript, (simxChar*)"helloPath"
+	//	, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	//if (result == 0) {
+		//if (data[0] == 1) {
 			cout << "Connected to VREP path" << endl;
 			exist = true;
 			simxInt succes;
@@ -52,8 +52,8 @@ pathObject::pathObject(int ID)
 			simxInt signalLength;
 			succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_streaming); // start stream
 
-		}
-	}
+		//}
+	//}
 }
 
 

@@ -100,20 +100,14 @@ getTextureInformation = function(inInts,inFloats,inStrings,inBuffer)
 end
 
 helloCams = function(inInts, inFloats, inStrings,inBuffer)
-    local savedState=sim.getInt32Parameter(sim.intparam_error_report_mode)
-    sim.setInt32Parameter(sim.intparam_error_report_mode,0)
     val = {}
-    val[1] = sim.getObjectHandle('Camera_feeder')
-    sim.setInt32Parameter(sim.intparam_error_report_mode,savedState)
+    val[1] = sim.getObjectHandle('Camera_feeder@silentError')
     return val, {},{}, ''
 end
 
 helloVolume = function(inInts, inFloats, inStrings,inBuffer)
-    local savedState=sim.getInt32Parameter(sim.intparam_error_report_mode)
-    sim.setInt32Parameter(sim.intparam_error_report_mode,0)
     val = {}
-    val[1] = sim.getObjectHandle('Field')
-    sim.setInt32Parameter(sim.intparam_error_report_mode,savedState)
+    val[1] = sim.getObjectHandle('Field@silentError')
     return val, {},{}, ''
 end
 
@@ -158,7 +152,6 @@ function isRunning(inInts, inFloats, inStrings, inBuffer)
 	else
 		result[2] = 0
 	end
-	print(result)
 	return result, {}, {}, ''
 end
 

@@ -273,9 +273,11 @@ void vrep_scene_content::transferVisionSensorData() {
 
 void vrep_scene_content::vrep_get_object_pose() {
 	updateMainCamObjectPose();
-	updateVisionSensorObjectPose();
-	updateVisionSensorRender();
-	transferVisionSensorData();
+	if (isVolumePresent()) {
+		updateVisionSensorObjectPose();
+		updateVisionSensorRender();
+		transferVisionSensorData();
+	}
 }
 
 float vrep_scene_content::computeScalarField() {

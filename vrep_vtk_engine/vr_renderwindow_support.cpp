@@ -273,7 +273,7 @@ void vr_renderwindow_support::synchronizeDevices() {
 	controller1_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
 	controller2_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
 
-	// Sent trackpad positions
+	// Send trackpad positions
 	float res[3];
 	vr_renderWindowInteractor->GetTouchPadPosition(vtkEventDataDevice::LeftController, vtkEventDataDeviceInput::TrackPad, res);
 	simxSetFloatSignal(clientID, "L_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
@@ -313,12 +313,14 @@ void vr_renderwindow_support::updateText() {
 	textUpdateCounter = 0;
 }
 
+// Callback function 
 void activateMenuItem(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata) {
 	miniClass* test = reinterpret_cast<miniClass*>(clientdata);
 	simxCallScriptFunction(test->clientID, (simxChar*)"Menu", sim_scripttype_childscript, (simxChar*)test->name.c_str()
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 }
 
+// Ugly code but VTK is behaving badly, this works
 void fixMenu(std::vector<std::string> *text, std::vector<miniClass> *functionName, std::vector<vtkSmartPointer<vtkCallbackCommand>> *callback, eventCatcher *events, int clientID) {
 	int menuH;
 	simxInt *data;
@@ -327,8 +329,8 @@ void fixMenu(std::vector<std::string> *text, std::vector<miniClass> *functionNam
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 
 	bool even = false;
+	events->GetMenu()->RemoveAllMenuItems();
 	if (data[0]!=-1) {
-		events->GetMenu()->RemoveAllMenuItems();
 		simxChar *stringData;
 		simxCallScriptFunction(clientID, (simxChar*)"Menu", sim_scripttype_childscript, (simxChar*)"getMenuItems"
 			, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, &dataLength, &stringData, NULL, NULL, simx_opmode_blocking);
@@ -448,7 +450,6 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->Modified();
 	
 	// Manage vision sensor thread (if necessary)
-	
 	std::thread camThread;
 	if (vrepScene->startVisionSensorThread()) {
 		camThread = std::thread(handleFunc, this);
@@ -456,6 +457,7 @@ void vr_renderwindow_support::activate_interactor() {
 		camThread.~thread();
 	}
 	
+	// Start the render loop
 	while (true) {
 		updatePose();
 		synchronizeDevices();
@@ -464,19 +466,19 @@ void vr_renderwindow_support::activate_interactor() {
 		scale = (float)vr_renderWindowInteractor->GetPhysicalScale();
 	
 		if (!useInteractor) {
-			vr_renderWindowInteractor->SetPhysicalScale(1);
+			vr_renderWindowInteractor->SetPhysicalScale(1); // no scaling
 		}
-		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
-		dynamicAddObjects();
-		updateText();
+		vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // actual vr render
+		dynamicAddObjects(); // see if there are new objects in the scene, if so add them
+		updateText(); // change framerate text
 		path->update();
 		if (isReady()) {
-			syncData();
+			syncData(); // transfer information of vision sensor in differend thread to this thread
 			//grid->updatMap();
-			chrono->increment2();
+			chrono->increment2(); 
 			vr_renderWindowInteractor->DoOneEvent(renderWindow, renderer); // render
 			chrono->increment();
-			setNotReady();
+			setNotReady(); // resume seperate thread
 		}
 		
 		if (simxGetLastCmdTime(clientID) <= 0) {
