@@ -67,8 +67,6 @@ public:
 	void syncData();
 	void discoverDevices();
 	void synchronizeDevices();
-
-
 	void updateText();
 	timerClass *chrono = new timerClass;
 protected:

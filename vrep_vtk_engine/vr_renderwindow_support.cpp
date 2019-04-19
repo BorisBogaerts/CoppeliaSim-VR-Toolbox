@@ -43,8 +43,20 @@
 
 #include <thread>
 #include <chrono>
+
+#include <vtkOpenVRMenuWidget.h>
+#include <vtkOpenVRMenuRepresentation.h>
+#include <vtkCommand.h>
+#include <vtkCallbackCommand.h>
 //#include <vtkOutputWindow.h>
 //#include <vtkFileOutputWindow.h>
+
+// Sorry this is purely vtk's fault, stupid function handles etc
+class miniClass {
+public:
+	std::string name;
+	int clientID;
+};
 
 class eventCatcher : public vtkOpenVRInteractorStyle
 {
@@ -76,21 +88,6 @@ public:
 		}else if (button == vtkEventDataDeviceInput::TrackPad) {
 			trackpad = true;
 			signalName.append("TrackPad_");
-			vtkOpenVRRenderWindowInteractor* rw = vtkOpenVRRenderWindowInteractor::SafeDownCast(this->Interactor); // get renderwindowinteractor
-			float res[3];
-			if (left) {
-				rw->GetTouchPadPosition(vtkEventDataDevice::LeftController, vtkEventDataDeviceInput::TrackPad, res);
-				simxSetFloatSignal(clientID, "L_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
-				simxSetFloatSignal(clientID, "L_Trackpad_pos_y", res[1], simx_opmode_oneshot);
-				simxSetFloatSignal(clientID, "L_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
-			}
-			else {
-				rw->GetTouchPadPosition(vtkEventDataDevice::RightController, vtkEventDataDeviceInput::TrackPad, res);
-				simxSetFloatSignal(clientID, "R_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
-				simxSetFloatSignal(clientID, "R_Trackpad_pos_y", res[1], simx_opmode_oneshot);
-				simxSetFloatSignal(clientID, "R_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
-			}
-			
 		}else if (button == vtkEventDataDeviceInput::Joystick) {
 			trackpad = true;
 			signalName.append("Joystick_");
@@ -127,7 +124,7 @@ public:
 			signalName.append("Touch");
 			mode = 0;
 		}
-
+		
 		if ((controller == vtkEventDataDevice::LeftController) && (button == vtkEventDataDeviceInput::TrackPad)&& (action == vtkEventDataAction::Release)) {
 			if ((grid != nullptr)){
 				cout << endl << "Collormap toggle" << endl;
@@ -275,6 +272,17 @@ void vr_renderwindow_support::synchronizeDevices() {
 	headset_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
 	controller1_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
 	controller2_vrep->updatePosition(renderWindow, vr_renderWindowInteractor, vr_camera);
+
+	// Sent trackpad positions
+	float res[3];
+	vr_renderWindowInteractor->GetTouchPadPosition(vtkEventDataDevice::LeftController, vtkEventDataDeviceInput::TrackPad, res);
+	simxSetFloatSignal(clientID, "L_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+	simxSetFloatSignal(clientID, "L_Trackpad_pos_y", res[1], simx_opmode_oneshot);
+	simxSetFloatSignal(clientID, "L_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
+	vr_renderWindowInteractor->GetTouchPadPosition(vtkEventDataDevice::RightController, vtkEventDataDeviceInput::TrackPad, res);
+	simxSetFloatSignal(clientID, "R_Trackpad_pos_x", res[0], simx_opmode_oneshot); // get last touchpad position
+	simxSetFloatSignal(clientID, "R_Trackpad_pos_y", res[1], simx_opmode_oneshot);
+	simxSetFloatSignal(clientID, "R_Trackpad_pos_z", res[2], simx_opmode_oneshot); // whatever this is
 }
 
 void vr_renderwindow_support::updateText() {
@@ -303,6 +311,66 @@ void vr_renderwindow_support::updateText() {
 	vecText->SetText(tab2);
 	vecText->Modified();
 	textUpdateCounter = 0;
+}
+
+void activateMenuItem(vtkObject* caller, unsigned long eid, void* clientdata, void *calldata) {
+	miniClass* test = reinterpret_cast<miniClass*>(clientdata);
+	simxCallScriptFunction(test->clientID, (simxChar*)"Menu", sim_scripttype_childscript, (simxChar*)test->name.c_str()
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+}
+
+void fixMenu(std::vector<std::string> *text, std::vector<miniClass> *functionName, std::vector<vtkSmartPointer<vtkCallbackCommand>> *callback, eventCatcher *events, int clientID) {
+	int menuH;
+	simxInt *data;
+	simxInt dataLength;
+    simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"doWeHaveManu"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+
+	bool even = false;
+	if (data[0]!=-1) {
+		events->GetMenu()->RemoveAllMenuItems();
+		simxChar *stringData;
+		simxCallScriptFunction(clientID, (simxChar*)"Menu", sim_scripttype_childscript, (simxChar*)"getMenuItems"
+			, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, &dataLength, &stringData, NULL, NULL, simx_opmode_blocking);
+		int encounteredStrings = 0;
+		int counter = 0;
+		text->push_back(std::string());
+		miniClass *temp;
+		while (encounteredStrings<dataLength){
+			if (stringData[counter] == char(0)) {
+				encounteredStrings++; 
+				even = !even;
+
+				if (even) { // create new strings
+					temp = new miniClass();
+					temp->name = std::string();
+					temp->clientID = clientID;
+					functionName->push_back(*temp);
+					vtkSmartPointer<vtkCallbackCommand> callbackTemp = vtkSmartPointer<vtkCallbackCommand>::New();
+					callbackTemp->SetCallback(activateMenuItem);
+					callback->push_back(callbackTemp);
+				}
+				else {
+					text->push_back(std::string());
+				}
+			}
+			else {
+				if (even) {
+					functionName->at(functionName->size()-1).name += ((char)stringData[counter]);
+				}
+				else {
+					text->at(text->size()-1) += (char)stringData[counter];	
+				}
+			}
+			counter++;
+		}
+	}
+	for (int i = (dataLength / 2)-1; i >=0; i--) {
+		std::string temp1 = functionName->at(i).name;
+		std::string temp2 = text->at(i);
+		callback->at(i)->SetClientData(&functionName->at(i));
+		events->GetMenu()->PushFrontMenuItem(temp1.c_str(), temp2.c_str(), callback->at(i));
+	}
 }
 
 void vr_renderwindow_support::activate_interactor() {
@@ -343,6 +411,13 @@ void vr_renderwindow_support::activate_interactor() {
 	eventCatcher *events = new(eventCatcher); // define object that captures buttonpress
 	events->clientID = clientID;
 	events->useVTKinteractor = useInteractor;
+
+
+	std::vector<std::string> text;
+	std::vector<miniClass> functionName;
+	std::vector<vtkSmartPointer<vtkCallbackCommand>> callback;
+	fixMenu(&text, &functionName, &callback, events, clientID);
+	
 	if ((grid != nullptr) && (vrepScene->isVolumePresent())){
 		cout << "Volume detected and connected" << endl;
 		events->grid = grid;
@@ -355,7 +430,6 @@ void vr_renderwindow_support::activate_interactor() {
 	synchronizeDevices();
 
 	// add text to
-	
 	vecText->SetText("vtkVectorText");
 	extrude->SetInputConnection(vecText->GetOutputPort());
 	extrude->SetExtrusionTypeToNormalExtrusion();
@@ -374,6 +448,7 @@ void vr_renderwindow_support::activate_interactor() {
 	renderer->Modified();
 	
 	// Manage vision sensor thread (if necessary)
+	
 	std::thread camThread;
 	if (vrepScene->startVisionSensorThread()) {
 		camThread = std::thread(handleFunc, this);

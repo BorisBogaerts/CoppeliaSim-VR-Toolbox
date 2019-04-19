@@ -197,11 +197,16 @@ getVisibleHandlesDynamic = function(inInts, inFloats, inStrings, inBuffer)
 	return ret, {}, {}, ''
 end
 
+doWeHaveManu = function(inInts, inFloats, inStrings, inBuffer)
+	h = {}
+	h[1] = sim.getObjectHandle('Menu@silentError')
+	return h, {}, {}, ''
+end
 
 function sysCall_init()
     -- simRemoteApi.start(19999,1300,true) -- if using different port
 	
-	-- Initalize all possible signals
+	-- Initalize all possible signals 
     sim.setIntegerSignal('L_Trigger_Press',0) -- set up string signal to transfer button state
 	sim.setIntegerSignal('R_Trigger_Press',0) -- set up string signal to transfer button state
 	
