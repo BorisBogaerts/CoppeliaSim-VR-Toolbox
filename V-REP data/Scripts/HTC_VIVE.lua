@@ -31,11 +31,18 @@
 getVisibleHandles = function(inInts, inFloats, inStrings, inBuffer)
 	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
 	ret = {}
+	if (toRestore==nil) then
+		toRestore = {}
+	end
 	for i = 1, #handles, 1 do
 		property=sim.getObjectSpecialProperty(handles[i])
         val = sim.boolAnd32(property, sim.objectspecialproperty_renderable)
 		if val>0 then
 			simpleShapeHandles=sim.ungroupShape(handles[i])
+			--simpleShapeHandles = {handles[i]}
+			if #simpleShapeHandles>1 then
+				toRestore[#toRestore + 1] = simpleShapeHandles
+			end
 			for ii = 1, #simpleShapeHandles, 1 do
 				ret[#ret+1] = simpleShapeHandles[ii]
 			end
@@ -44,6 +51,15 @@ getVisibleHandles = function(inInts, inFloats, inStrings, inBuffer)
 	handles = simGetObjectsInTree(sim_handle_scene, sim.object_shape_type, 0)
 	numberOfObjects = #handles
 	return ret, {}, {}, ''
+end
+
+
+function sysCall_cleanup()
+    if (toRestore==nil)==false then
+		for i = 1, #toRestore, 1 do
+			sim.groupShapes(toRestore[i]) -- vrep does not seem to do this correctly 
+		end
+	end
 end
 
 getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)

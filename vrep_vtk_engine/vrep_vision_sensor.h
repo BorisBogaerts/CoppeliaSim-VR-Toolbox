@@ -82,7 +82,7 @@ private:
 	int update = 10;
 	bool basic = false;
 	int refH;
-	bool computeQuality = true;
+	bool computeQuality = false;
 
 	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
 	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
