@@ -101,6 +101,18 @@ void pathObject::update() {
 				cells->Modified();
 				polyData->Modified();
 				prevLength = signalLength;
+			}else if(signalLength < prevLength){
+				points->SetNumberOfPoints((int)(signalLength / 3)); //set all points anew
+				cells->Reset();
+				for (int i = 1; i < (int)((signalLength / 3)); i++) {
+					cells->InsertNextCell(2);
+					cells->InsertCellPoint(i - 1);
+					cells->InsertCellPoint(i);
+				}
+				points->Modified();
+				cells->Modified();
+				polyData->Modified();
+				prevLength = signalLength;
 			}
 			else {
 				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float)); // for if somebody else changed the path, some optimizer maybe?

@@ -46,7 +46,7 @@ function sysCall_init()
     h = sim.getObjectHandle('Camera_feeder')
     cams=sim.getObjectsInTree(h,sim.object_visionsensor_type)
 	print(cams)
-	prevTrackpad = 0
+	prevTrackpad = false
 	Elapsedtime = nil
 	
 	-- Chack for cameras (no cams no measurement
@@ -191,6 +191,13 @@ function sysCall_sensing()
     if (#cams==0) then
 		return
 	end
+	
+	if (sim.getIntegerSignal("R_Trigger_Press")==1) then
+		sim.setIntegerSignal('MeasurementInProgress',1) -- set up string signal to transfer button state
+	else
+		sim.setIntegerSignal('MeasurementInProgress',0) -- set up string signal to transfer button state
+	end
+	
 	if(integrateMeasurement) then
 		--sim.setIntegerSignal('ResetMeasurement',0) -- set up string signal to transfer button state
 		--sim.setIntegerSignal('MeasurementInProgress',sim.getIntegerSignal("RightControllerTrigger")) -- set up string signal to transfer button state
@@ -206,21 +213,22 @@ function sysCall_sensing()
 end
 
 function checkReset()
-	local tpad = sim.getIntegerSignal("LeftControllerTrackPadX") 
-	if (tpad==0) then -- if not pressed return
-		prevTrackpad = tpad
+	local tpad = sim.getIntegerSignal("L_TrackPad_Press")==1
+	if (tpad==false) then -- if not pressed return
+		prevTrackpad = false
 		return
 	end
-	if (tpad~=prevTrackpad) then -- first time after press
+	if (prevTrackpad==false) then -- first time after press
 		Elapsedtime = sim.getSimulationTime()		-- record starting time
-		prevTrackpad = tpad
+		prevTrackpad = true
 		return
 	end
 	
-	if (sim.getSimulationTime()-Elapsedtime)>=10 then -- if the elapsed time is more than five seconds
+	if (sim.getSimulationTime()-Elapsedtime)>=5 then -- if the elapsed time is more than five seconds
 		sim.setIntegerSignal("ResetMeasurement",1) -- only now send reset pulse
 		Elapsedtime = sim.getSimulationTime()
 		path = nil
+		--sim.setStringSignal('path', sim.packFloatTable({0,0,0}))
 		print("Reset")
 	end
 	prevTrackpad = tpad
@@ -229,6 +237,9 @@ end
 function doTrace()
 	if (path==nil) then
 		path = sim.getObjectPosition(feeds[1], vive)
+		path[#path+1] = path[1]
+		path[#path+1] = path[2]
+		path[#path+1] = path[3]
 	else
 		pos = sim.getObjectPosition(feeds[1], vive)
 		if (pointDistance(pos, {path[#path-2], path[#path-1], path[#path]}) < traceDist) then
