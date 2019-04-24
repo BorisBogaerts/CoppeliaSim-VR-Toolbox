@@ -45,9 +45,8 @@
 #include <vtkOpenVRMenuRepresentation.h>
 #include <vtkCommand.h>
 #include <vtkCallbackCommand.h>
-//#include <vtkOutputWindow.h>
-//#include <vtkFileOutputWindow.h>
-
+#include <vtkOutputWindow.h>
+#include <vtkFileOutputWindow.h>
 // Sorry this is purely vtk's fault, stupid function handles etc
 class miniClass {
 public:
@@ -160,19 +159,29 @@ vr_renderwindow_support::vr_renderwindow_support(int cid, int ref, int interacto
 
 	}
 
-	/*vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
+	vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
 	vtkFileOutputWindow* fow = vtkFileOutputWindow::New();
 	fow->SetFileName("debug.log");
 	if (ow)
 	{
 		ow->SetInstance(fow);
 	}
-	fow->Delete();*/
+	fow->Delete();
 }
 
 vr_renderwindow_support::~vr_renderwindow_support()
 {
 
+}
+
+void vr_renderwindow_support::checkLayers() {
+	simxInt val;
+	simxGetIntegerSignal(clientID, (simxChar*)"VisibleLayers", &val, simx_opmode_streaming);
+	for (int i = 0; i < vrepScene->getNumActors(); i++) {
+		std::bitset<16> mybit = (std::bitset<16>)val;
+		mybit = (mybit & visibilityLayer[i]) & visibilityLayer[i];
+		vrepScene->getActor(i)->SetVisibility(mybit.any());
+	}
 }
 
 void vr_renderwindow_support::updateRender() {
@@ -189,6 +198,7 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.2);
 		vrepScene->getActor(i)->GetProperty()->SetSpecular(0.2);
 		renderer->AddActor(vrepScene->getActor(i));
+		visibilityLayer.push_back((std::bitset<16>)vrepScene->getVisibilityLayer(i));
 	}
 	lastObject = vrepScene->getNumActors();
 	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
@@ -506,6 +516,7 @@ void vr_renderwindow_support::activate_interactor() {
 		dynamicAddObjects(); // see if there are new objects in the scene, if so add them
 		updateText(); // change framerate text
 		path->update();
+		checkLayers();
 		if (isReady()) {
 			syncData(); // transfer information of vision sensor in differend thread to this thread
 			//grid->updatMap();

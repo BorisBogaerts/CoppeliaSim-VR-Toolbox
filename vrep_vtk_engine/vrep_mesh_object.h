@@ -75,6 +75,8 @@ public:
 	void setActor(vtkSmartPointer<vtkActor> act);
 	void deepCopy(vrep_mesh_object *newObject);
 	void setCustomShader();
+	int visibilityLayer;
+	float vrep_mesh_opacity;
 protected:
 	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();
 	vtkSmartPointer<vtkPolyData> meshData = vtkSmartPointer<vtkPolyData>::New();
@@ -85,7 +87,8 @@ protected:
 	vtkSmartPointer<vtkTransformTextureCoords> tShift = nullptr;
 
 	float vrep_mesh_color[3];
-	float vrep_mesh_opacity;
+	
+	
 	int vrep_mesh_handle;
 	int clientID;
 	int refHandle;

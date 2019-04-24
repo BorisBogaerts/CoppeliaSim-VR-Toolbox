@@ -40,6 +40,7 @@ public:
 	vtkSmartPointer<vtkPolyData> getMeshData();
 	std::string getName() { return objectName; };
 	float color[3];
+	int visibilityLayer;
 	float opacity;
 	bool getTexture() { return texture; };
 protected:

@@ -214,16 +214,26 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {
 	vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction = vtkSmartPointer<vtkColorTransferFunction>::New();
 	colorTransferFunction->AddRGBPoint(0, 0.6, 0.6, 0.6); // start with grey
-	colorTransferFunction->AddRGBPoint(0.1, 0.706, 0.016, 0.150); // cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/
-	colorTransferFunction->AddRGBPoint(1, 0.230, 0.299, 0.754);
-	LUT->SetNumberOfTableValues(numValues); // Build lookup table
-	LUT->Build();
 
+	// cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/
+	//colorTransferFunction->AddRGBPoint(0.01, 0.706, 0.016, 0.150); 
+	//colorTransferFunction->AddRGBPoint(1, 0.230, 0.299, 0.754);
+
+	// MATLAB inverted parula
+	colorTransferFunction->AddRGBPoint(0.01, 0.9769, 0.9839, 0.0805);
+	colorTransferFunction->AddRGBPoint(0.05, 0.0704, 0.7457, 0.7258);
+	colorTransferFunction->AddRGBPoint(1, 0.2422, 0.1504, 0.6603);
+
+	LUT->SetNumberOfTableValues(numValues); // Build lookup table
+	LUT->SetRange(0, 1);
+	
 	for (int i = 0; i < numValues; ++i){
 		double *rgb;
 		rgb = colorTransferFunction->GetColor(static_cast<double>(i) / numValues);
 		rgb[3] = 1.0;
+		//std::cout << rgb[0] << "   " << rgb[1] << "   " << rgb[2] << endl;
 		LUT->SetTableValue(i, rgb);
 	}
+	LUT->Build();
 	return LUT;
 }

@@ -319,7 +319,7 @@ float vrep_scene_content::computeScalarField() {
 				float prevVal = scalar->GetValue(ID);  // if integration is not active then 
 				float newqual;
 				if (camsContainer[i].useQuality()) {
-					newqual = std::max(prevVal, (float)temp->GetPointData()->GetArray(1)->GetTuple1(ii))/ qualityThreshold;
+					newqual = std::max(prevVal, (float)temp->GetPointData()->GetArray(1)->GetTuple1(ii) / qualityThreshold);
 				}else {
 					newqual = std::min((float)1.0, prevVal + 1);
 				}
@@ -406,7 +406,7 @@ void vrep_scene_content::checkMeasurementObject() {
 				activeThread = true;
 			}
 
-			vrepMeshContainer[i].getMapper()->SetLookupTable(vol->getLUT(10)); // sets colormap  
+			vrepMeshContainer[i].getMapper()->SetLookupTable(vol->getLUT(100)); // sets colormap  
 			//volumePresent = true;
 		}
 	}

@@ -53,7 +53,7 @@ int vrep_mesh_reader::read_mesh(int clientID, int meshIndex, int &h, int &v) {
 	};
 
 	if (sizes[0] > 0) {
-		std::cout << "Loaded geometry with handle " << meshIndex << " with " << sizes[0]/3 << " vertices and " << sizes[1]/3 << " faces" << " vrep name : " << objectName << std::endl;
+		std::cout << "Loaded geometry with handle " << meshIndex << " with " << sizes[0]/3 << " vertices and " << sizes[1]/3 << " faces" << " vrep name : " << objectName << " Visibility layer : " << sizes[5] << std::endl;
 	}
 	
 
@@ -96,6 +96,7 @@ int vrep_mesh_reader::read_mesh(int clientID, int meshIndex, int &h, int &v) {
 	if (sizes[4] == 1) {
 		this->texture = true;
 	}
+	visibilityLayer = sizes[5];
 	return sizes[2];
 }
 

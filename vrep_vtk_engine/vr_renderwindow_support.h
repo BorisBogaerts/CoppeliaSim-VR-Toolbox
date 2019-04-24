@@ -48,6 +48,8 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <bitset>
+
 #pragma once
 class vr_renderwindow_support
 {
@@ -72,6 +74,7 @@ public:
 	void discoverDevices();
 	void synchronizeDevices();
 	void updateText();
+	void checkLayers();
 	timerClass *chrono = new timerClass;
 protected:
 	vrep_scene_content *vrepScene;
@@ -82,6 +85,9 @@ protected:
 	int update = 10;
 	int useInteractor = true;
 	int lastObject = 0;
+
+	std::vector<std::bitset<16>> visibilityLayer;
+
 	vtkSmartPointer<vtkOpenVRRenderer> renderer = vtkSmartPointer<vtkOpenVRRenderer>::New();
 	vtkSmartPointer<vtkOpenVRRenderWindow> renderWindow = vtkSmartPointer<vtkOpenVRRenderWindow>::New();
 	vtkSmartPointer<vtkOpenVRRenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkOpenVRRenderWindowInteractor>::New();

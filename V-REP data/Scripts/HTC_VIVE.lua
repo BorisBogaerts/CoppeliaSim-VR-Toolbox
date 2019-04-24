@@ -104,6 +104,9 @@ getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)
 		returnValues[#returnValues + 1] = opacity[1] -- (0.5 if not turned ON)
 	end
     objectName=sim.getObjectName(h)
+	
+	dump, size[6] = sim.getObjectInt32Parameter(h, sim.objintparam_visibility_layer)
+	print(size[6])
 	return size, returnValues, {objectName}, ''
 end
 
@@ -203,6 +206,7 @@ function getEstetics(inInts, inFloats, inStrings, inBuffer)
 end
 
 function sysCall_sensing() -- example of something to do with the buttonpress events
+	sim.setIntegerSignal("VisibleLayers", sim.getInt32Parameter(sim.intparam_visible_layers))
 	if (numberOfObjects==nil) or (dynamicLoading==false) then
 		return
 	end

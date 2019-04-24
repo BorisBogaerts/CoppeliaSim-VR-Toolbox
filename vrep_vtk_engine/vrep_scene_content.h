@@ -90,6 +90,7 @@ public:
 	bool startVisionSensorThread() { return activeThread; };
 	vrep_volume_grid *vol = new vrep_volume_grid();
 	void dynamicLoad();
+	int getVisibilityLayer(int num) { return vrepMeshContainer[num].visibilityLayer; };
 protected:
 	int clientID;
 	int refHandle;

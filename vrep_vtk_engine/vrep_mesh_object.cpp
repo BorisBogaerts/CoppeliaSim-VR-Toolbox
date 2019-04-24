@@ -67,6 +67,7 @@ void vrep_mesh_object::extractDataFromReader(vrep_mesh_reader reader) {
 	this->setColor(reader.color);
 	this->setOpacity(reader.opacity);
 	this->texturedObject = reader.getTexture();
+	this->visibilityLayer = reader.visibilityLayer;
 	vrep_mesh_actor->PickableOff();
 };
 
