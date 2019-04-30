@@ -192,7 +192,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 	planeMapper->SetInputConnection(transformFilter->GetOutputPort());
 
 	panel->SetMapper(planeMapper);
-	renderer->SetBackground(1.0, 1.0, 1.0);
+	renderer->SetBackground(0.0, 0.0, 0.0);
 	renderer->SetActiveCamera(vr_camera);
 	
 	renderWindow->AddRenderer(renderer);

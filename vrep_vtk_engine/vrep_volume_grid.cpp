@@ -38,6 +38,7 @@
 #include <vtkDataObject.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
+#include <ppl.h>
 //#include <LuaBridge.h>
 using namespace std;
 vrep_volume_grid::~vrep_volume_grid()
@@ -70,7 +71,9 @@ bool vrep_volume_grid::updatePosition(vtkSmartPointer<vtkFloatArray> values) {
 		pose->RotateX(-90);
 		pose->Modified();
 	}
-	scalar->ShallowCopy(values);
+	//scalar->ShallowCopy(values);
+	//scalar->DeepCopy(values);
+	//scalar = values;
 	scalar->Modified();
 	return false;
 }

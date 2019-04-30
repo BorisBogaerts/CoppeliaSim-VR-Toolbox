@@ -91,6 +91,7 @@ public:
 	vrep_volume_grid *vol = new vrep_volume_grid();
 	void dynamicLoad();
 	int getVisibilityLayer(int num) { return vrepMeshContainer[num].visibilityLayer; };
+	void turnBlack();
 protected:
 	int clientID;
 	int refHandle;
@@ -107,6 +108,7 @@ protected:
 	std::vector<vrep_vision_sensor> camsContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer2;
+	int meshH;
 
 	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();
 	vtkSmartPointer<vtkFloatArray> state = vtkSmartPointer<vtkFloatArray>::New();

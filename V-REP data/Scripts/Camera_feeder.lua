@@ -163,7 +163,6 @@ function sysCall_sensing()
 
 	-- Let's for now keep reseting here.
 	if(integrateMeasurement) then
-		sim.setIntegerSignal('MeasurementInProgress',sim.getIntegerSignal("R_Trigger_Press")) -- relay path recording
 		checkReset()
 	end
 end

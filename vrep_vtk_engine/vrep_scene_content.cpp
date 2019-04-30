@@ -197,6 +197,7 @@ void vrep_scene_content::loadCams() {
 				if (add) {
 					vtkSmartPointer<vtkActor> tempAct = vrepMeshContainer2[k].getActor();
 					tempAct->PickableOff();
+					
 					camsContainer[camsContainer.size() - 1].getRenderer()->AddActor(tempAct); // do not add this to the renders
 				}
 				if (setPanel) {
@@ -213,6 +214,8 @@ void vrep_scene_content::loadCams() {
 		cout << "No vision sensors found" << endl;
 	};
 }
+
+
 
 vtkActor* vrep_scene_content::getActor(int i) {
 	return vrepMeshContainer[i].getActor();
@@ -268,7 +271,10 @@ void vrep_scene_content::transferVisionSensorData() {
 		}
 		
 	}
-	bool update = vol->updatePosition(scalar);
+	if (isVolumePresent()){
+		bool update = vol->updatePosition(scalar);
+	}
+	
 }
 
 void vrep_scene_content::vrep_get_object_pose() {
@@ -313,7 +319,6 @@ float vrep_scene_content::computeScalarField() {
 
 		for (int i = 0; i <camsContainer.size(); i++) {
 			vtkSmartPointer<vtkPolyData> temp = camsContainer[i].checkVisibility();
-
 			for (int ii = 0; ii < temp->GetPointData()->GetArray(0)->GetNumberOfTuples(); ii++) {
 				int ID = temp->GetPointData()->GetArray(0)->GetTuple1(ii); // vertex ID (array only contains visible poins, other points are ommited)
 				float prevVal = scalar->GetValue(ID);  // if integration is not active then 
@@ -332,6 +337,7 @@ float vrep_scene_content::computeScalarField() {
 		if (inProgress > 0) {
 			state->DeepCopy(scalar);
 		}
+		scalar->Modified();
 		float coverage = (float)count / scalar->GetNumberOfValues();
 		return coverage;
 }
@@ -349,6 +355,9 @@ void vrep_scene_content::checkMeasurementObject() {
 	if (volumePresent) { // volume is occupied by volume
 		return;
 	}
+	for (int j = 0; j < vrepMeshContainer2.size(); j++) {
+		vrepMeshContainer2[j].getActor()->GetProperty()->SetColor(0.0, 0.0, 0.0);
+	}
 	if (vol->getAltHandle() == -1) { // no alternative handle was returned so no child
 		return;
 	}
@@ -358,9 +367,9 @@ void vrep_scene_content::checkMeasurementObject() {
 		if (vol->getAltHandle() == vrepMeshContainer[i].getHandle()) { // This is the one
 			float color[] = { 1.0,1.0,1.0 }; // base color white
 			vrepMeshContainer[i].setColor(color);
-			vtkSmartPointer<vtkFloatArray> scalar = vol->getScalars(); // get the scalar field (contains quality per vertex)
+			//vtkSmartPointer<vtkFloatArray> scalar = vol->getScalars(); // get the scalar field (contains quality per vertex)
 			vtkSmartPointer<vtkPolyData> meshData = vrepMeshContainer[i].getMeshData(); // get the mesh
-
+			meshH = i;
 			// now itialize scalars
 			scalar->SetNumberOfComponents(1);
 			scalar->SetNumberOfValues(meshData->GetNumberOfPoints()); // one value for each vertex
