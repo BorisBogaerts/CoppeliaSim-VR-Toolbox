@@ -7,12 +7,20 @@ https://www.youtube.com/watch?v=_GXVdgihVgQ
 Some Youtube videos showing the interface in action:
 - https://www.youtube.com/watch?v=yMydjviF7yg
 - https://www.youtube.com/watch?v=Dsh8oyN4sD0&t
+- https://youtu.be/nakQGTs4Fs0
+- https://youtu.be/3Lvhmh3th3Q
+- https://www.youtube.com/watch?v=QYX7WIiahbw (courtesy of Mathieu Lauret and Amir Beddiaf)
 
 The interface has the following capabilities:
-- Read all renderable geometry from V-REP (colors, opacities and textures are also transfered)
+- Read all renderable geometry from V-REP (colors, opacities and (moving) textures are also transfered)
+- Read dynamically generated geometry
 - Synchronize all poses in real time
-- Send the positions of controllers to V-REP
-- Send controller buttonpress events to V-REP as string signals
+- Send the positions of controllers and headset to V-REP
+- Send all controller buttonpress/buttontouch events to V-REP as string signals
+- Send trackpad position to V-REP
+- Import standard interactions as dummies, that can be attatched to controllers
+- Add a customizable menu in VR that when menu items are selected, triggers the execution of V-REP scripts.
+- Visibility layers are respected, which allows for the possibility of hiding objects.
 
 # Installation (easy)
 Installation instructions are now also available on youtube: https://www.youtube.com/watch?v=_GXVdgihVgQ
@@ -48,10 +56,14 @@ Two scenes used in the paper are also provided:
 
 Please cite this paper if the interface is used in a relevant context (camera placement/coverage visualization)
 
-@article{bogaerts2018interactive,
-  title={Interactive Camera Network Design using a Virtual Reality Interface},
+@article{bogaerts2019interactive,
+  title={Interactive Camera Network Design Using a Virtual Reality Interface},
   author={Bogaerts, Boris and Sels, Seppe and Vanlanduit, Steve and Penne, Rudi},
-  journal={arXiv preprint arXiv:1809.07593},
-  year={2018}
+  journal={Sensors},
+  volume={19},
+  number={5},
+  pages={1003},
+  year={2019},
+  publisher={Multidisciplinary Digital Publishing Institute}
 }
 

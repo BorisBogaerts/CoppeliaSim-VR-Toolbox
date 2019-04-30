@@ -106,7 +106,6 @@ getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)
     objectName=sim.getObjectName(h)
 	
 	dump, size[6] = sim.getObjectInt32Parameter(h, sim.objintparam_visibility_layer)
-	print(size[6])
 	return size, returnValues, {objectName}, ''
 end
 
