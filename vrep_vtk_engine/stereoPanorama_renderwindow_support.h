@@ -49,6 +49,8 @@
 #include "pathObject.h"
 #include <vector>
 #include <vtkExtractVOI.h>
+#include <bitset>
+#include <atomic>
 
 #pragma once
 class stereoPanorama_renderwindow_support
@@ -62,12 +64,15 @@ public:
 	void updatePose();
 	void setClientID(int cid, int interactor) { clientID = cid; useInteractor = (interactor == 0); };
 	vrep_scene_content * getVrepScene() { return vrepScene; };
-
+	void renderStrip(float dist, bool left, bool top, int k);
 	void visionSensorThread();
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 
 	void activateMainCam();
+	void checkLayers();
+	void readLights();
+	void dynamicAddObjects();
 
 	void syncData();
 
@@ -76,23 +81,25 @@ protected:
 	vrep_scene_content * vrepScene;
 	int clientID;
 	int handle;
+	int lastObject = 0;
 
 	int refH;
 	int update = 10;
 	int useInteractor = true;
-	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();// = vtkSmartPointer<vtkOpenGLRenderer>::New();
-	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();// = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
-	vtkSmartPointer<vtkWin32RenderWindowInteractor> vr_renderWindowInteractor = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();// = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
-	vtkSmartPointer<vtkOpenGLCamera> vr_camera = vtkSmartPointer<vtkOpenGLCamera>::New();// = vtkSmartPointer<vtkOpenGLCamera>::New();
-	vtkSmartPointer<vtkTransform> pose = vtkSmartPointer<vtkTransform>::New();// = vtkSmartPointer<vtkTransform>::New();
+	std::vector<vtkSmartPointer<vtkOpenGLRenderer>> renderer;
+	std::vector<vtkSmartPointer<vtkWin32OpenGLRenderWindow>> renderWindow;
+	std::vector<vtkSmartPointer<vtkWin32RenderWindowInteractor>> vr_renderWindowInteractor;
+	std::vector<vtkSmartPointer<vtkOpenGLCamera>> vr_camera;
+	std::vector<vtkSmartPointer<vtkTransform>> pose;
+	std::vector<vtkSmartPointer<vtkImageData>> slice;
 
-
-	vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+	std::vector<vtkSmartPointer<vtkWindowToImageFilter>> filter;
 
 	vrep_volume_grid *grid;
 	pathObject *path;
-
-
+	std::atomic<bool> busy = true;
+	std::atomic<bool> locked = false;
+	std::vector<std::bitset<16>> visibilityLayer;
 	float coverage = 0;
 	bool dataReady = false;
 	int textUpdateCounter = 0;

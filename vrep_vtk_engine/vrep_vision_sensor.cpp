@@ -202,6 +202,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 	renderWindow->OffScreenRenderingOn();
 	renderWindow->SetDesiredUpdateRate(500.0);
 	filter->SetInput(renderWindow);
+	filter->ShouldRerenderOff();
 	//resize->SetInputConnection(filter->GetOutputPort()); // extra
 	//texture->SetInputData(image);
 	texture->SetInputConnection(filter->GetOutputPort());

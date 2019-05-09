@@ -93,7 +93,8 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>copy /Y "$(ProjectDir)omnidirectional_shader.glsl" "$(TargetDir)omnidirectional_shader.glsl"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

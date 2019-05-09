@@ -248,6 +248,7 @@ void vr_renderwindow_support::readLights() {
 		renderer->AddLight(light);
 	}
 }
+
 void vr_renderwindow_support::dynamicAddObjects() {
 	int result;
 	simxGetIntegerSignal(clientID, "dynamic_load_request", &result, simx_opmode_streaming);
