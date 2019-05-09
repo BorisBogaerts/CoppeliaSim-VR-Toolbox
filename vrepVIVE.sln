@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27703.2026
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "vrep_vr_installer", "..\vrep_vr_installer\vrep_vr_installer.wixproj", "{48C1710E-B9ED-4D47-8EB1-8D68D4B33E21}"
 EndProject
@@ -95,6 +95,7 @@ Global
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x86.ActiveCfg = Release|Win32
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.MinSizeRel|x86.Build.0 = Release|Win32
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x64.ActiveCfg = Release|x64
+		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x64.Build.0 = Release|x64
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x86.ActiveCfg = Release|Win32
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.Release|x86.Build.0 = Release|Win32
 		{0DCEB7E2-4BF0-4764-BD57-10BEA8B93F08}.RelWithDebInfo|x64.ActiveCfg = Release|x64

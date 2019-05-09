@@ -45,6 +45,7 @@
 
 #include <vtkOutputWindow.h>
 #include <vtkFileOutputWindow.h>
+#include <vtkPNGWriter.h>
 
 void handleFunc(stereoPanorama_renderwindow_support *sup) {
 	cout << "Vision sensor thread activated" << endl;
@@ -77,11 +78,6 @@ stereoPanorama_renderwindow_support::~stereoPanorama_renderwindow_support()
 
 }
 
-void stereoPanorama_renderwindow_support::updateRender() {
-	vr_renderWindowInteractor->Render();
-	subRWI->Render();
-};
-
 
 void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	vrepScene = vrepSceneIn;
@@ -91,13 +87,8 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 		vrepScene->getActor(i)->PickableOff();
 		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.7);
 		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.5);
-		subRenderer->AddActor(vrepScene->getActor(i));
-	}
-	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
-		subRenderer->AddActor(vrepScene->getPanelActor(i));
 	}
 	if (vrepScene->isVolumePresent()) {
-		subRenderer->AddViewProp(vrepScene->getVolume());
 		grid = vrepScene->vol;
 		//renderer->ResetCamera();
 	}
@@ -115,18 +106,6 @@ void stereoPanorama_renderwindow_support::updatePose() {
 
 	simxGetObjectOrientation(clientID, handle, refH, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
 	simxGetObjectPosition(clientID, handle, refH, position, simx_opmode_streaming);
-	subCamPose->PostMultiply();
-	subCamPose->Identity();
-	subCamPose->RotateZ((eulerAngles[2] * 180 / 3.1415));
-	subCamPose->RotateY((eulerAngles[1] * 180 / 3.1415));
-	subCamPose->RotateX((eulerAngles[0] * 180 / 3.1415));
-
-	subCamPose->Translate(position);
-	subCamPose->RotateX(-90);
-	subCamPose->Inverse();
-	subCamPose->Modified();
-	subCam->SetModelTransformMatrix(subCamPose->GetMatrix());
-	subCam->Modified();
 }
 
 void stereoPanorama_renderwindow_support::syncData() {
@@ -153,7 +132,6 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 	vrepScene->vrep_get_object_pose();
 
 	activateMainCam(); // shader that combines images
-	activateHelpCam(); // individual renders
 
 	if ((grid != nullptr) && (vrepScene->isVolumePresent())) {
 		cout << "Volume detected and connected" << endl;
@@ -168,7 +146,24 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		camThread.~thread();
 	}
 	while (true) {
-		updateRender();
+		vtkSmartPointer<vtkImageAppend> vertical = vtkSmartPointer<vtkImageAppend>::New();
+		//vertical->SetAppendAxis()
+		//vertical->SetAppendAxis(1);
+		vtkSmartPointer<vtkExtractVOI> extractVOI =vtkSmartPointer<vtkExtractVOI>::New();
+		for (int i = 0; i < 1000; i++) {
+			vtkSmartPointer<vtkImageData> im;
+			renderWindow->Render();
+			filter->Modified();
+			filter->ReadFrontBufferOff();
+			filter->Update();
+			extractVOI->SetInputConnection(filter->GetOutputPort());
+			vertical->AddInputData(extractVOI->GetOutput());
+		}
+		cout << vertical->GetNumberOfInputs() << endl;
+		vtkSmartPointer<vtkPNGWriter> wr = vtkSmartPointer<vtkPNGWriter>::New();
+		wr->SetFileName("test.png");
+		wr->SetInputConnection(vertical->GetOutputPort());
+		wr->Write();
 		chrono->increment();
 
 		path->update();
@@ -195,103 +190,18 @@ void stereoPanorama_renderwindow_support::activateMainCam() {
 
 	// Classical vtk pipeline to set up renderwindow etc with extra options
 	renderer->SetActiveCamera(vr_camera);
-	addPlane(); // Used to obtain pixel coordinate in shader
 	renderer->UseShadowsOff();
 	renderer->Modified();
 
 	renderWindow->AddRenderer(renderer);
-	renderWindow->SetDesiredUpdateRate(90.0);
-	renderWindow->SetSize(512, 512);
+	//renderWindow->SetDesiredUpdateRate(90.0);
+	renderWindow->SetSize(121, 768);
+	renderWindow->SetOffScreenRendering(true);
 	renderWindow->Initialize();
 	vr_renderWindowInteractor->SetRenderWindow(renderWindow);
 	vr_renderWindowInteractor->Initialize();
+	filter->SetInput(renderWindow);
 }
 
-void stereoPanorama_renderwindow_support::activateHelpCam() {
-	subCam->SetViewAngle(90.0);
-	subCam->SetModelTransformMatrix(subCamPose->GetMatrix());
-	subCam->SetPosition(0, 0, 0);
-	subCam->SetFocalPoint(0, 0, 1);
-	subCam->SetViewUp(0, 1, 0);
-
-	// Classical vtk pipeline to set up renderwindow etc with extra options
-	subRenderer->SetActiveCamera(subCam);
-
-	subRenderer->SetBackground(1.0,1.0,1.0);
-	
-	subRenderer->AutomaticLightCreationOn();
-	subRenderer->SetAutomaticLightCreation(true);
-	subRenderer->LightFollowCameraOn();
-	subRenderer->UseShadowsOff();
-	subRenderer->Modified();
-
-	subRenderWindow->AddRenderer(subRenderer);
-	subRenderWindow->SetDesiredUpdateRate(90.0);
-	subRenderWindow->SetSize(1024, 1024);
-	subRenderWindow->SetOffScreenRendering(true);
-	subRenderWindow->Initialize();
-	subRWI->SetRenderWindow(subRenderWindow);
-	subRWI->Initialize();
 
 
-	if ((grid != nullptr) && (vrepScene->isVolumePresent())) {
-		cout << "Volume detected and connected" << endl;
-	}
-	cout << "Everithing loaded succesfully" << endl;
-
-	// Search for dynamic path object
-	path = new pathObject(clientID);
-	subRenderer->AddActor(path->getActor());
-	subRenderer->Modified();
-
-}
-
-void stereoPanorama_renderwindow_support::addPlane() {
-	
-	vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
-	plane->SetCenter(0.0, 0.0, 0.5);
-	plane->SetNormal(0.0, 0.0, 1.0);
-
-	vtkSmartPointer<vtkTextureMapToPlane> texturePlane = vtkSmartPointer<vtkTextureMapToPlane>::New();
-	texturePlane->SetInputConnection(plane->GetOutputPort());
-
-	vtkSmartPointer<vtkOpenGLPolyDataMapper> planeMapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
-	planeMapper->SetInputConnection(texturePlane->GetOutputPort());
-
-	vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
-
-	// Load custom shader code as string
-	std::ifstream ifs("omnidirectional_shader.glsl");
-	std::string content((std::istreambuf_iterator<char>(ifs)),
-		(std::istreambuf_iterator<char>()));
-	std::string toInject;
-
-	toInject.append("//VTK::Normal::Impl\n"); // vtk wants this
-	toInject.append(content); // add shader code
-	toInject.append("  return;\n"); // escape from shader
-	planeMapper->AddShaderReplacement(vtkShader::Fragment,"//VTK::Normal::Impl", true, toInject, false); // inject custom shader code
-	// Now remove a bunch of stuff (we don't want lights for example to interfere with any
-	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Color::Dec", true, "", false); // Remove colors
-	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Light::Dec", true, "", false); // Remove lights
-	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Color::Impl", true, "", false); // Remove colors
-	planeMapper->AddShaderReplacement(vtkShader::Fragment, "//VTK::Light::Impl", true, "", false); // Remove lights
-	// same for vertex shader
-	planeMapper->AddShaderReplacement(vtkShader::Vertex, "//VTK::Color::Dec", true, "", false); // Remove colors
-	planeMapper->AddShaderReplacement(vtkShader::Vertex, "//VTK::Light::Dec", true, "", false); // Remove lights
-	planeMapper->AddShaderReplacement(vtkShader::Vertex, "//VTK::Color::Impl", true, "", false); // Remove colors
-	planeMapper->AddShaderReplacement(vtkShader::Vertex, "//VTK::Light::Impl", true, "", false);// Remove lights
-
-	// Ok this is seriously dangerous summary:
-		// I do not initialize the image properly
-		// But I do not acces it in the shader, no problem right?
-	vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
-	image->SetDimensions(1, 1, 1);
-	image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
-	texture->SetInputData(image);
-
-	//planeMapper->MapDataArrayToMultiTextureAttribute()
-	vtkSmartPointer<vtkActor> texturedPlane = vtkSmartPointer<vtkActor>::New();
-	texturedPlane->SetMapper(planeMapper);
-	texturedPlane->SetTexture(texture);
-	renderer->AddActor(texturedPlane);
-}

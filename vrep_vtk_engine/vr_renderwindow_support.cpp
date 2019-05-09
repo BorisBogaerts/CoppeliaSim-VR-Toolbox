@@ -195,8 +195,9 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	for (int i = 0; i < vrepScene->getNumActors(); i++) {
 		vrepScene->getActor(i)->PickableOff();
 		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.6);
-		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.2);
-		vrepScene->getActor(i)->GetProperty()->SetSpecular(0.2);
+		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.4);
+		vrepScene->getActor(i)->GetProperty()->SetSpecular(0.5);
+		vrepScene->getActor(i)->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
 		renderer->AddActor(vrepScene->getActor(i));
 		visibilityLayer.push_back((std::bitset<16>)vrepScene->getVisibilityLayer(i));
 	}
@@ -241,6 +242,8 @@ void vr_renderwindow_support::readLights() {
 
 		light->SetDiffuseColor(dataFloat[(i * 12) + 6], dataFloat[(i * 12) + 7], dataFloat[(i * 12) + 8]);
 		light->SetSpecularColor(dataFloat[(i * 12) + 9], dataFloat[(i * 12) + 10], dataFloat[(i * 12) + 11]);
+		light->SetFocalPoint(0, 0, 1);
+		light->SetConeAngle(180.0);
 		light->SetTransformMatrix(tform->GetMatrix());
 		renderer->AddLight(light);
 	}
@@ -436,7 +439,8 @@ void vr_renderwindow_support::activate_interactor() {
 	}
 
 	renderer->SetAutomaticLightCreation(true);
-	renderer->LightFollowCameraOff();
+	renderer->LightFollowCameraOn();
+	
 	//renderer->ligt
 	readLights();
 	//renderer->UseShadowsOff();
@@ -444,6 +448,7 @@ void vr_renderwindow_support::activate_interactor() {
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetMultiSamples(0);
 	renderWindow->SetDesiredUpdateRate(90.0);
+	
 	//renderWindow->SetTrackHMD(true);
 	renderWindow->Initialize();
 

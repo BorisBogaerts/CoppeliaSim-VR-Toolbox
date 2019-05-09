@@ -216,9 +216,9 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 
 vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {
 	vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction = vtkSmartPointer<vtkColorTransferFunction>::New();
-	colorTransferFunction->AddRGBPoint(0, 0.6, 0.6, 0.6); // start with grey
+	colorTransferFunction->AddRGBPoint(0, 1.0, 1.0, 1.0); // start with white
 
-	// cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/
+	// cool to warm colormap, should work better: https://www.kennethmoreland.com/color-maps/ (not for me at least)
 	//colorTransferFunction->AddRGBPoint(0.01, 0.706, 0.016, 0.150); 
 	//colorTransferFunction->AddRGBPoint(1, 0.230, 0.299, 0.754);
 
