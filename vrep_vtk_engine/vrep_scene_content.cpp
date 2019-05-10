@@ -289,7 +289,8 @@ void vrep_scene_content::vrep_get_object_pose() {
 float vrep_scene_content::computeScalarField() {
 	if (firstTime) {
 		if (volumePresent) {
-			scalar->SetNumberOfValues(vol->getNumberOfValues());
+			scalar = vol->getScalars();
+			//scalar->SetNumberOfValues(vol->getNumberOfValues());
 			state->SetNumberOfValues(vol->getNumberOfValues());
 		}
 		else {

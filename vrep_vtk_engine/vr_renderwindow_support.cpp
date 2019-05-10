@@ -271,7 +271,6 @@ void vr_renderwindow_support::updatePose() {
 }
 
 void vr_renderwindow_support::syncData() {
-	//vrepScene->transferVisionSensorData(iren, win, ren);
 	vrepScene->transferVisionSensorData();
 }
 

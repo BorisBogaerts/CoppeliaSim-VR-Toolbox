@@ -153,19 +153,14 @@ void vrep_vision_sensor::updateRender() {
 		renderWindow->Render();
 	}
 	else {
-		renderWindow->Render();
-		//texture->Render(renderer);
+		renderer->Render();
 		filter->Modified();
 		filter->ReadFrontBufferOff();
 		filter->Update();
-		//resize->SetOutputDimensions(100,100,1);
-		//resize->Update();
-		//image->ShallowCopy(filter->GetOutput());
 	}
 };
 
 void vrep_vision_sensor::transferImageTexture() {
-	//image->Modified();
 	image->ShallowCopy(filter->GetOutput());
 	image->Modified();
 }
@@ -202,14 +197,12 @@ void vrep_vision_sensor::activate(double scale[]) {
 	renderWindow->OffScreenRenderingOn();
 	renderWindow->SetDesiredUpdateRate(500.0);
 	filter->SetInput(renderWindow);
-	filter->ShouldRerenderOff();
-	//resize->SetInputConnection(filter->GetOutputPort()); // extra
-	//texture->SetInputData(image);
+	//filter->ShouldRerenderOff();
 	texture->SetInputConnection(filter->GetOutputPort());
 	texture2->SetInputData(image); // play with different textures to seperate data between threads
 	panel->SetTexture(texture2);
 	panel->Modified();
-
+	renderWindow->Render();
 }
 
 void vrep_vision_sensor::activateBasic() {

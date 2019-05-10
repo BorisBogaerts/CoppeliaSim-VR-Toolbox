@@ -49,6 +49,7 @@
 #include <vtkFileOutputWindow.h>
 #include <vtkPNGWriter.h>
 
+#include <vtkRendererCollection.h>
 #define PI 3.14159265
 
 void handleFunc(stereoPanorama_renderwindow_support *sup) {
@@ -114,9 +115,9 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 			renderer[k]->AddActor(vrepScene->getPanelActor(i));
 		}
 		if (vrepScene->isVolumePresent()) {
-			renderer[k]->AddViewProp(vrepScene->getVolume());
+			renderer[k]->AddVolume(vrepScene->getVolume());
 			grid = vrepScene->vol;
-			//renderer->ResetCamera();
+			renderer[k]->ResetCamera();
 		}
 		else {
 			grid = nullptr;
@@ -218,15 +219,15 @@ void stereoPanorama_renderwindow_support::syncData() {
 }
 
 void stereoPanorama_renderwindow_support::visionSensorThread() {
-	vrepScene->activateNewConnection(); // connect to vrep with a new port
-	while (busy) {
+	//vrepScene->activateNewConnection(); // connect to vrep with a new port
+	//while (busy) {
 		vrepScene->updateVisionSensorObjectPose();
 		coverage = vrepScene->updateVisionSensorRender();
-		dataReady = true;
-		while (dataReady) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		};
-	}
+	//	dataReady = true;
+	//	while (dataReady) {
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	//	};
+	//}
 }
 
 
@@ -245,6 +246,7 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 	if (top) {
 		angle = 45;
 	}
+	//renderer[k]->SetViewport(0.49, 0.0, 0.51,1.0);
 	for (int i = 0; i < width; i++) {
 		extractVOI = vtkSmartPointer<vtkExtractVOI>::New();
 		prePose->Identity();
@@ -260,6 +262,7 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		
 		vr_camera[k]->Modified();
 		renderer[k]->Render();
+		//renderWindow[k]->Render();
 		filter[k]->Modified();
 		filter[k]->ReadFrontBufferOff();
 		filter[k]->Update();
@@ -290,20 +293,25 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		renderer[k]->Modified();
 	}
 
-	// Manage vision sensor thread (if necessary)
-	std::thread camThread;
-	bool threadActivated = false;
-	if (vrepScene->startVisionSensorThread()) {
-		busy = true;
-		camThread = std::thread(handleFunc, this);
-		threadActivated = true;
-	}
-	else {
-		camThread.~thread();
-	}
+	//// Manage vision sensor thread (if necessary)
+	//std::thread camThread;
+	//bool threadActivated = false;
+	//if (vrepScene->startVisionSensorThread()) {
+	//	busy = true;
+	//	camThread = std::thread(handleFunc, this);
+	//	threadActivated = true;
+	//}
+	//else {
+	//	camThread.~thread();
+	//}
 
-
+	//vrepScene->vol->toggleMode();
 	while (true) {
+		if (vrepScene->getVolume()!=nullptr) { // if vision sensor
+			visionSensorThread();
+			syncData();
+			vrepScene->getVolume()->Modified();
+		}
 		updatePose();
 		path->update();
 		//checkLayers();
@@ -339,18 +347,17 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 		cout << "Finished rendering image in " << elapsed_secs << " seconds" << endl;
-		if (isReady()) {
-			syncData();
-			//grid->updatMap();
-			chrono->increment2();
-			setNotReady();
-		}
+		//if (isReady()) {
+		//	syncData();
+		//	//grid->updatMap();
+		//	chrono->increment2();
+		//	setNotReady();
+		//}
 
 		if (simxGetLastCmdTime(clientID) <= 0) {
 			for (int k = 0; k < vr_camera.size(); k++) {
 				vr_renderWindowInteractor[k]->TerminateApp(); // stop if the v-rep simulation is not running
 			}
-			camThread.~thread();
 			return;
 		}
 	}
@@ -371,9 +378,9 @@ void stereoPanorama_renderwindow_support::activateMainCam() {
 		renderer[k]->AutomaticLightCreationOff();
 		renderWindow[k]->AddRenderer(renderer[k]);
 		renderWindow[k]->SetSize(121.0, 768.0); // make shure we have a 'middle' pixel
-		renderWindow[k]->SetOffScreenRendering(true);
+		//renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
-		renderWindow[k]->SetDesiredUpdateRate(1000.0);
+		//renderWindow[k]->SetDesiredUpdateRate(2000.0);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
 		vr_renderWindowInteractor[k]->Initialize();
 		filter[k]->SetInput(renderWindow[k]);
