@@ -156,39 +156,6 @@ function sysCall_cleanup()
 	end
 end
 
-function sysCall_sensing()
-    if (#cams==0) then
-		return
-	end
-
-	-- Let's for now keep reseting here.
-	if(integrateMeasurement) then
-		checkReset()
-	end
-end
-
-function checkReset()
-	local tpad = sim.getIntegerSignal("L_TrackPad_Press")==1
-	if (tpad==false) then -- if not pressed return
-		prevTrackpad = false
-		return
-	end
-	if (prevTrackpad==false) then -- first time after press
-		Elapsedtime = sim.getSimulationTime()		-- record starting time
-		prevTrackpad = true
-		return
-	end
-	
-	if (sim.getSimulationTime()-Elapsedtime)>=5 then -- if the elapsed time is more than five seconds
-		sim.setIntegerSignal("ResetMeasurement",1) -- only now send reset pulse
-		Elapsedtime = sim.getSimulationTime()
-		path = nil
-		--sim.setStringSignal('path', sim.packFloatTable({0,0,0}))
-		print("Reset")
-	end
-	prevTrackpad = tpad
-end
-
 function helloPath(inInts,inFloats,inStrings,inBuffer)
 	ret = {}
 	if (trace) then

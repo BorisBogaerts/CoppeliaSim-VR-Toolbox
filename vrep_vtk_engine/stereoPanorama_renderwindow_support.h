@@ -65,7 +65,6 @@ public:
 	void setClientID(int cid, int interactor) { clientID = cid; useInteractor = (interactor == 0); };
 	vrep_scene_content * getVrepScene() { return vrepScene; };
 	void renderStrip(float dist, bool left, bool top, int k);
-	void visionSensorThread();
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 

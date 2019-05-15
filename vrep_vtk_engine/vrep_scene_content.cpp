@@ -140,7 +140,7 @@ void vrep_scene_content::loadVolume() {
 	bool succes = vol->loadGrid();
 	if (succes) {
 		volume = vol->getVolume();
-		volume->SetEstimatedRenderTime(0);
+		//volume->SetEstimatedRenderTime(0);
 		volumePresent = true;
 	}
 }

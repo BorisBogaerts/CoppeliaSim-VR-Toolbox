@@ -150,13 +150,13 @@ void vrep_volume_grid::setColorMap(int mode) {
 		simxCallScriptFunction(clientID, (simxChar*)"Field", sim_scripttype_childscript, (simxChar*)"getColorMapData"
 			, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numLengths, &lengths, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_streaming);
 		for (int i = 0; i < lengths[0]; i++) {
-			opacityTransferFunction->AddPoint(data[i * 2]/4.0, data[(i * 2) + 1]);
+			opacityTransferFunction->AddPoint(data[i * 2] / 4.0, data[(i * 2) + 1]);
 
 		}
 		//cout << endl;
 		for (int i = 0; i < lengths[1]; i++) {
 			int beginID = (lengths[0] * 2) + (i * 4);
-			colorTransferFunction->AddRGBPoint(data[beginID]/4.0, data[beginID+1], data[beginID+2], data[beginID+3]);
+			colorTransferFunction->AddRGBPoint(data[beginID] / 4.0, data[beginID + 1], data[beginID + 2], data[beginID + 3]);
 			//cout << "Point added : " << data[beginID] << "	" << data[beginID + 1] << "	" << data[beginID + 2] << "	" << data[beginID + 3] << endl;
 		}
 		//opacityTransferFunction->AddPoint(0, 0.0);
@@ -170,7 +170,7 @@ void vrep_volume_grid::setColorMap(int mode) {
 		colorTransferFunction->AddRGBPoint(1.0, 0.8, 0, 0);*/
 	}
 	else {
-		opacityTransferFunction->AddPoint(0, 0.8);
+		opacityTransferFunction->AddPoint(0.0, 0.995);
 		opacityTransferFunction->AddPoint(0.125, 0);
 		opacityTransferFunction->AddPoint(0.25, 0);
 		colorTransferFunction->AddRGBPoint(0.0, 1.0, 0.0, 0.0);
@@ -209,7 +209,7 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 	mapper->SetBlendModeToComposite();
 	setColorMap(2);
 	volume->SetUserTransform(pose);
-	
+
 	volume->PickableOff();
 	return volume;
 }
@@ -229,8 +229,8 @@ vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {
 
 	LUT->SetNumberOfTableValues(numValues); // Build lookup table
 	LUT->SetRange(0, 1);
-	
-	for (int i = 0; i < numValues; ++i){
+
+	for (int i = 0; i < numValues; ++i) {
 		double *rgb;
 		rgb = colorTransferFunction->GetColor(static_cast<double>(i) / numValues);
 		rgb[3] = 1.0;

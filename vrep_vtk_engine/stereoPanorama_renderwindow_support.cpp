@@ -42,20 +42,15 @@
 #include <thread>
 #include <chrono>
 #include <vtkOpenGLPolyDataMapper.h>
+#include <vtkVolumeProperty.h>
 #include <math.h>      
-#include <ppl.h>
+//#include <ppl.h>
 
 #include <vtkOutputWindow.h>
 #include <vtkFileOutputWindow.h>
 #include <vtkPNGWriter.h>
 
-#include <vtkRendererCollection.h>
 #define PI 3.14159265
-
-void handleFunc(stereoPanorama_renderwindow_support *sup) {
-	cout << "Vision sensor thread activated" << endl;
-	sup->visionSensorThread();
-}
 
 stereoPanorama_renderwindow_support::stereoPanorama_renderwindow_support(int cid, int ref, int interactor)
 {
@@ -103,7 +98,7 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 			vrepScene->getActor(i)->PickableOff();
 			vrepScene->getActor(i)->GetProperty()->SetAmbient(0.6);
 			vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.4);
-			vrepScene->getActor(i)->GetProperty()->SetSpecular(0.5);
+			vrepScene->getActor(i)->GetProperty()->SetSpecular(1.0);
 			vrepScene->getActor(i)->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
 			renderer[k]->AddActor(vrepScene->getActor(i));
 			if (k == 0) {
@@ -115,9 +110,9 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 			renderer[k]->AddActor(vrepScene->getPanelActor(i));
 		}
 		if (vrepScene->isVolumePresent()) {
-			renderer[k]->AddVolume(vrepScene->getVolume());
+			renderer[k]->AddViewProp(vrepScene->getVolume());
 			grid = vrepScene->vol;
-			renderer[k]->ResetCamera();
+			//renderer[k]->ResetCamera();
 		}
 		else {
 			grid = nullptr;
@@ -218,18 +213,6 @@ void stereoPanorama_renderwindow_support::syncData() {
 	vrepScene->transferVisionSensorData();
 }
 
-void stereoPanorama_renderwindow_support::visionSensorThread() {
-	//vrepScene->activateNewConnection(); // connect to vrep with a new port
-	//while (busy) {
-		vrepScene->updateVisionSensorObjectPose();
-		coverage = vrepScene->updateVisionSensorRender();
-	//	dataReady = true;
-	//	while (dataReady) {
-	//		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-	//	};
-	//}
-}
-
 
 void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, bool top, int k) {
 	vtkSmartPointer<vtkImageAppend> horizontal = vtkSmartPointer<vtkImageAppend>::New();
@@ -246,7 +229,6 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 	if (top) {
 		angle = 45;
 	}
-	//renderer[k]->SetViewport(0.49, 0.0, 0.51,1.0);
 	for (int i = 0; i < width; i++) {
 		extractVOI = vtkSmartPointer<vtkExtractVOI>::New();
 		prePose->Identity();
@@ -260,9 +242,9 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		vr_camera[k]->SetModelTransformMatrix(prePose->GetMatrix());
 		vr_camera[k]->Modified();
 		
-		vr_camera[k]->Modified();
+		//vr_camera[k]->Modified();
 		renderer[k]->Render();
-		//renderWindow[k]->Render();
+		vr_renderWindowInteractor[k]->Render();
 		filter[k]->Modified();
 		filter[k]->ReadFrontBufferOff();
 		filter[k]->Update();
@@ -293,29 +275,20 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		renderer[k]->Modified();
 	}
 
-	//// Manage vision sensor thread (if necessary)
-	//std::thread camThread;
-	//bool threadActivated = false;
-	//if (vrepScene->startVisionSensorThread()) {
-	//	busy = true;
-	//	camThread = std::thread(handleFunc, this);
-	//	threadActivated = true;
-	//}
-	//else {
-	//	camThread.~thread();
-	//}
-
 	//vrepScene->vol->toggleMode();
 	while (true) {
-		if (vrepScene->getVolume()!=nullptr) { // if vision sensor
-			visionSensorThread();
-			syncData();
-			vrepScene->getVolume()->Modified();
+		for (int i = 0; i < 2; i++) {
+			if (vrepScene->getVolume() != nullptr) { // if vision sensor
+				vrepScene->updateVisionSensorObjectPose();
+				coverage = vrepScene->updateVisionSensorRender();
+				syncData();
+			}
+			updatePose();
+			checkLayers();
+			path->update();
+			dynamicAddObjects(); // see if there are new objects in the scene, if so add them
 		}
-		updatePose();
-		path->update();
-		//checkLayers();
-
+		
 		for (int k = 0; k < vr_camera.size(); k++) {
 			renderWindow[k]->Render();
 		}
@@ -373,12 +346,14 @@ void stereoPanorama_renderwindow_support::activateMainCam() {
 		// Classical vtk pipeline to set up renderwindow etc with extra options
 		renderer[k]->SetActiveCamera(vr_camera[k]);
 		renderer[k]->UseShadowsOff();
-		renderer[k]->Modified();
 		renderer[k]->LightFollowCameraOff();
 		renderer[k]->AutomaticLightCreationOff();
+		renderer[k]->UseDepthPeelingForVolumesOn();
+		renderer[k]->SetMaximumNumberOfPeels(0);
+		renderer[k]->Modified();
 		renderWindow[k]->AddRenderer(renderer[k]);
 		renderWindow[k]->SetSize(121.0, 768.0); // make shure we have a 'middle' pixel
-		//renderWindow[k]->SetOffScreenRendering(true);
+		renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
 		//renderWindow[k]->SetDesiredUpdateRate(2000.0);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
