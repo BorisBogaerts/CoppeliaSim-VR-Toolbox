@@ -68,6 +68,7 @@ public:
 	void updatePosition();
 	vtkSmartPointer<vtkPolyData> getMeshData() { return meshData; };
 	vtkSmartPointer<vtkTransform> getPose() { return pose; };
+	vtkSmartPointer<vtkActor> getNewActor();
 	// copy functions for setting cam objects
 	int getHandle() { return vrep_mesh_handle; };
 	void getHandles();
@@ -85,6 +86,8 @@ protected:
 
 	vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
 	vtkSmartPointer<vtkTransformTextureCoords> tShift = nullptr;
+	vtkSmartPointer<vtkFloatArray> tccoords = vtkSmartPointer<vtkFloatArray>::New();
+	vtkSmartPointer<vtkPNGReader> io = vtkSmartPointer<vtkPNGReader>::New();
 
 	float vrep_mesh_color[3];
 	

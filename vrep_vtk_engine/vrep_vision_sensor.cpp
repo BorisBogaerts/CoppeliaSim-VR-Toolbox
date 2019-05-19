@@ -38,6 +38,8 @@
 #include <fstream>
 #include <vtkMatrix4x4.h>
 #include <vtkFloatArray.h>
+#include <vtkProperty.h>
+
 void vrep_vision_sensor::updatePosition() {
 	this->updatePose();
 	invPose->DeepCopy(pose);
@@ -163,6 +165,11 @@ void vrep_vision_sensor::updateRender() {
 void vrep_vision_sensor::transferImageTexture() {
 	image->ShallowCopy(filter->GetOutput());
 	image->Modified();
+	for (int i = 0; i < extraImages.size(); i++) {
+		extraImages[i]->DeepCopy(filter->GetOutput());
+		extraImages[i]->Modified();
+		extraTextures[i]->Update();
+	}
 }
 
 
@@ -175,7 +182,8 @@ void vrep_vision_sensor::activate(double scale[]) {
 	vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 	vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
 	vtkSmartPointer<vtkTransformFilter> transformFilter = vtkSmartPointer<vtkTransformFilter>::New();
-	
+	scaleX = scale[0];
+	scaleY = scale[1];
 	transform->Scale(scale[0], scale[1], 1);
 	transform->RotateZ(180);
 	transform->RotateY(180);
@@ -185,6 +193,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 
 	transformFilter->SetTransform(transform);
 	planeMapper->SetInputConnection(transformFilter->GetOutputPort());
+	planeMapper->Update();
 
 	panel->SetMapper(planeMapper);
 	renderer->SetBackground(0.0, 0.0, 0.0);
@@ -203,6 +212,39 @@ void vrep_vision_sensor::activate(double scale[]) {
 	panel->SetTexture(texture2);
 	panel->Modified();
 	renderWindow->Render();
+}
+
+vtkSmartPointer<vtkActor> vrep_vision_sensor::getNewactor() {
+	vtkSmartPointer<vtkActor> newActor = vtkSmartPointer<vtkActor>::New();
+	vtkSmartPointer<vtkImageData> newImage = vtkSmartPointer<vtkImageData>::New();
+	// buildup
+	vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
+	vtkSmartPointer<vtkTextureMapToPlane> texturePlane = vtkSmartPointer<vtkTextureMapToPlane>::New();
+	vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+	vtkSmartPointer<vtkTransformFilter> transformFilter = vtkSmartPointer<vtkTransformFilter>::New();
+	transform->Scale(scaleX, scaleY, 1);
+	transform->RotateZ(180);
+	transform->RotateY(180);
+
+	texturePlane->SetInputConnection(plane->GetOutputPort());
+	transformFilter->SetInputConnection(texturePlane->GetOutputPort());
+
+	transformFilter->SetTransform(transform);
+	planeMapper->SetInputConnection(transformFilter->GetOutputPort());
+	newActor->SetMapper(planeMapper);
+	extraImages.push_back(newImage);
+	extraTextures.push_back(vtkSmartPointer<vtkTexture>::New());
+	extraTextures.back()->SetInputData(extraImages.back());
+	newActor->SetTexture(extraTextures.back());
+
+	newActor->SetUserTransform(pose2); // this took long
+	newActor->GetProperty()->SetAmbient(0.6);
+	newActor->GetProperty()->SetDiffuse(0.4);
+	newActor->GetProperty()->SetSpecular(1.0);
+	newActor->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
+	newActor->Modified();
+	return newActor;
 }
 
 void vrep_vision_sensor::activateBasic() {
