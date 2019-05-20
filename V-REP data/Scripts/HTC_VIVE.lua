@@ -138,7 +138,7 @@ end
 getTextureInformation = function(inInts,inFloats,inStrings,inBuffer)
     a=sim.getShapeViz(inInts[1],0)
     sim.saveImage(a.texture.texture,a.texture.resolution,1,"textureTransfer.png",100)
-    return {}, a.texture.coordinates, {"C:/Program Files/V-REP3/V-REP_PRO_EDU/textureTransfer.png"}, ''
+    return {}, a.texture.coordinates, {sim.getStringParameter(sim.stringparam_application_path) .."/textureTransfer.png"}, ''
 end
 
 helloCams = function(inInts, inFloats, inStrings,inBuffer)

@@ -70,12 +70,13 @@ public:
 	void loadVolume();
 	void vrep_get_object_pose();
 	std::vector<vrep_mesh_object> getVrepSceneActors() { return vrepMeshContainer; };
-	vtkActor* getActor(int i);
-	vtkActor* getActor2(int i);
+	vtkSmartPointer<vtkActor> getActor(int i);
+	vtkSmartPointer<vtkActor> getActor2(int i);
 	int getNumActors();
 	int getNumRenders() { return camsContainer.size(); };
 	vtkSmartPointer<vtkVolume> getVolume() { return volume; };
 	vtkSmartPointer<vtkActor> getPanelActor(int i) { return camsContainer[i].getActor(); };
+	vtkSmartPointer<vtkActor> getNewPanelActor(int i) { return camsContainer[i].getNewactor(); };
 	float computeScalarField();
 	bool isVolumePresent() { return volumePresent; };
 	void loadCams();
@@ -91,7 +92,7 @@ public:
 	vrep_volume_grid *vol = new vrep_volume_grid();
 	void dynamicLoad();
 	int getVisibilityLayer(int num) { return vrepMeshContainer[num].visibilityLayer; };
-	void turnBlack();
+	vtkSmartPointer<vtkActor> getNewActor(int i);
 protected:
 	int clientID;
 	int refHandle;

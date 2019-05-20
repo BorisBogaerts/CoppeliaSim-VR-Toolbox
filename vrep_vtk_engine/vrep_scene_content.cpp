@@ -203,6 +203,7 @@ void vrep_scene_content::loadCams() {
 				if (setPanel) {
 					this->getActor(k)->PickableOff();
 					camsContainer[camsContainer.size() - 1].setPanel(this->getActor(k)); panelIndex = k;
+					camsContainer[camsContainer.size() - 1].setPose2(vrepMeshContainer[k].getPose());
 				}
 			}
 			double dim[] = { data[i + 8] , data[i + 9] };
@@ -217,11 +218,15 @@ void vrep_scene_content::loadCams() {
 
 
 
-vtkActor* vrep_scene_content::getActor(int i) {
+vtkSmartPointer<vtkActor> vrep_scene_content::getActor(int i) {
 	return vrepMeshContainer[i].getActor();
 }
 
-vtkActor* vrep_scene_content::getActor2(int i) {
+vtkSmartPointer<vtkActor> vrep_scene_content::getNewActor(int i) {
+	return vrepMeshContainer[i].getNewActor();
+}
+
+vtkSmartPointer<vtkActor> vrep_scene_content::getActor2(int i) {
 	return vrepMeshContainer2[i].getActor();
 }
 

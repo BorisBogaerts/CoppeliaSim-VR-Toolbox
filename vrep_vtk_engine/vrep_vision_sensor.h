@@ -69,7 +69,9 @@ public:
 	void setPanel(vtkSmartPointer<vtkActor> pnl) { panel = pnl; };
 	vtkSmartPointer<vtkOpenGLRenderer> getRenderer() { return renderer; };
 	vtkSmartPointer<vtkActor> getActor() { return panel; };
+	vtkSmartPointer<vtkActor> getNewactor();
 	vtkSmartPointer<vtkPolyData> checkVisibility();
+	void setPose2(vtkSmartPointer<vtkTransform> temp) { pose2 = temp; };
 	void setPointData(vtkSmartPointer<vtkPoints> data, vtkSmartPointer<vtkTransform> pose);
 	void updatePose();
 	void transferImageTexture();
@@ -83,6 +85,7 @@ private:
 	bool basic = false;
 	int refH;
 	bool computeQuality = false;
+	float scaleX, scaleY;
 
 	vtkSmartPointer<vtkOpenGLRenderer> renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
 	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkWin32OpenGLRenderWindow>::New();
@@ -94,6 +97,8 @@ private:
 	vtkSmartPointer<vtkOpenGLTexture> texture = vtkSmartPointer<vtkOpenGLTexture>::New();
 	vtkSmartPointer<vtkOpenGLTexture> texture2 = vtkSmartPointer<vtkOpenGLTexture>::New();
 	vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
+	std::vector<vtkSmartPointer<vtkImageData>> extraImages;
+	vtkSmartPointer<vtkTransform> pose2;
 
 	vtkSmartPointer<vtkTransformFilter > ptsT = vtkSmartPointer<vtkTransformFilter >::New();
 	vtkSmartPointer<vtkSelectVisiblePoints> selectVisiblePoints = vtkSmartPointer<vtkSelectVisiblePoints>::New();

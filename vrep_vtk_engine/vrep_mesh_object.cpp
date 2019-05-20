@@ -43,6 +43,7 @@
 #include <vtkMatrix4x4.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkCleanPolyData.h>
+#include <vtkImageData.h>
 #define PI 3.14f
 
 vrep_mesh_object::vrep_mesh_object() {
@@ -86,13 +87,13 @@ void vrep_mesh_object::makeActor() {
 			for (int i = 0; i < nameLength; i++) {
 				textureName.append(&name[i]);
 			};
-			vtkSmartPointer<vtkPNGReader> io = vtkSmartPointer<vtkPNGReader>::New();
+			
 			io->SetFileName(textureName.c_str());
 			texture->SetInputConnection(io->GetOutputPort());
 			texture->MipmapOn();
 			texture->InterpolateOn();
 			texture->Update();
-			vtkSmartPointer<vtkFloatArray> tccoords = vtkSmartPointer<vtkFloatArray>::New();
+			
 			tccoords->SetNumberOfComponents(2);
 			for (int i = 0; i < (dataLength/ 2) ; i++) {
 				tccoords->InsertNextTuple2(data[2 * i], data[2 * i + 1]);
@@ -114,6 +115,36 @@ void vrep_mesh_object::makeActor() {
 	};
 	vrep_mesh_actor->SetUserTransform(pose);
 };
+
+vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
+	vtkSmartPointer<vtkActor> newActor = vtkSmartPointer<vtkActor>::New();
+	vtkSmartPointer<vtkPolyDataMapper> newPM = vtkSmartPointer<vtkPolyDataMapper>::New();
+	vtkSmartPointer<vtkPolyData> PD = vtkSmartPointer<vtkPolyData>::New();
+	newPM->SetLookupTable(vrep_polyData_mapper->GetLookupTable());
+	PD->ShallowCopy(meshData);
+	//PD->GetPointData()->SetScalars(meshData->GetPointData()->GetScalars()); // if visibility computation
+	newPM->SetInputData(PD);
+	newActor->SetMapper(newPM);
+	if (texturedObject) {
+		vtkSmartPointer<vtkTexture> newTexture = vtkSmartPointer<vtkTexture>::New();
+		vtkSmartPointer<vtkImageData> newIm = vtkSmartPointer<vtkImageData>::New();
+		vtkSmartPointer<vtkFloatArray> newTcoords = vtkSmartPointer<vtkFloatArray>::New();
+		newIm->DeepCopy(io->GetOutput());
+		newTexture->SetInputData(newIm);
+
+		newTexture->MipmapOn();
+		newTexture->InterpolateOn();
+		newTexture->Update();
+
+		newTcoords->DeepCopy(tccoords);
+		PD->GetPointData()->SetTCoords(newTcoords);
+		newActor->SetTexture(newTexture);
+	}
+	newActor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
+	newActor->GetProperty()->SetOpacity(vrep_mesh_opacity);
+	newActor->SetUserTransform(pose);
+	return newActor;
+}
 
 void vrep_mesh_object::setActor(vtkSmartPointer<vtkActor> act) {
 	vrep_mesh_actor = act;
