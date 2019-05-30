@@ -64,13 +64,12 @@ public:
 	void updatePose();
 	void setClientID(int cid, int interactor) { clientID = cid; useInteractor = (interactor == 0); };
 	vrep_scene_content * getVrepScene() { return vrepScene; };
-	void renderStrip(float dist, bool left, bool top, int k);
+	void renderStrip(float dist, bool left, bool top, int k, int width, int height);
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 
-	void activateMainCam();
+	void activateMainCam(int height);
 	void checkLayers();
-	void readLights();
 	void dynamicAddObjects();
 
 	void syncData();

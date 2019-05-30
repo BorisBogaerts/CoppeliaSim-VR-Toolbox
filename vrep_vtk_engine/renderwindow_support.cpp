@@ -53,10 +53,6 @@ renderwindow_support::renderwindow_support(int cid, int ref, int interactor)
 	refH = ref;
 	setClientID(cid, interactor);
 	chrono->coverage = &coverage;
-	// Now add spectator camera
-	simxFloat *data;
-	simxInt dataLength;
-
 	simxGetObjectHandle(clientID, (simxChar*)"Vision_sensor", &handle, simx_opmode_blocking);
 }
 

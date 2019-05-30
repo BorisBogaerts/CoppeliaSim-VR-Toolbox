@@ -109,21 +109,12 @@ getGeometryInformation = function(inInts, inFloats, inStrings, inBuffer)
 	return size, returnValues, {objectName}, ''
 end
 
+
 function getLightInfo(inInts,inFloats,inStrings,inBuffer)
 	handles = simGetObjectsInTree(sim_handle_scene, sim.object_light_type, 0)
 	inInts = {#handles}
 	returnValues = {}
-	for i = 1, #handles, 1 do
-		pos = sim.getObjectPosition(handles[i], -1)
-		returnValues[#returnValues + 1] = pos[1]
-		returnValues[#returnValues + 1] = pos[2]
-		returnValues[#returnValues + 1] = pos[3]
-		
-		pos = sim.getObjectOrientation(handles[i], -1)
-		returnValues[#returnValues + 1] = pos[1]
-		returnValues[#returnValues + 1] = pos[2]
-		returnValues[#returnValues + 1] = pos[3]
-		
+	for i = 1, #handles, 1 do		
 		dimp, dump2, c1, c2 = sim.getLightParameters(handles[i])
 		returnValues[#returnValues + 1] = c1[1]
 		returnValues[#returnValues + 1] = c1[2]
@@ -131,6 +122,13 @@ function getLightInfo(inInts,inFloats,inStrings,inBuffer)
 		returnValues[#returnValues + 1] = c2[1]
 		returnValues[#returnValues + 1] = c2[2]
 		returnValues[#returnValues + 1] = c2[3]
+		dump, returnValues[#returnValues + 1] = sim.getObjectFloatParameter(handles[i], sim.lightfloatparam_spot_cutoff)
+		returnValues[#returnValues] =  180 * returnValues[#returnValues]/3.1415
+		dump, returnValues[#returnValues + 1] = sim.getObjectFloatParameter(handles[i], sim.lightfloatparam_spot_exponent)
+		dump, returnValues[#returnValues + 1] = sim.getObjectFloatParameter(handles[i], sim.lightfloatparam_const_attenuation)
+		dump, returnValues[#returnValues + 1] = sim.getObjectFloatParameter(handles[i], sim.lightfloatparam_lin_attenuation)
+		dump, returnValues[#returnValues + 1] = sim.getObjectFloatParameter(handles[i], sim.lightfloatparam_quad_attenuation)
+		inInts[#inInts + 1] = handles[i]
 	end
 	return inInts, returnValues, {}, ''
 end
@@ -206,6 +204,18 @@ end
 
 function sysCall_sensing() -- example of something to do with the buttonpress events
 	sim.setIntegerSignal("VisibleLayers", sim.getInt32Parameter(sim.intparam_visible_layers))
+	if (sim.getScriptSimulationParameter(sim.handle_self, "High_quality_render")==true) and (goodRendering==false) then
+		goodRendering = true
+		print("The good rendering is activated")
+		sim.setIntegerSignal("High_quality_render",1)
+	end
+	
+	if (sim.getScriptSimulationParameter(sim.handle_self, "High_quality_render")==false) and (goodRendering==true) then
+		goodRendering = false
+		print("The good rendering is deactivated")
+		sim.setIntegerSignal("High_quality_render",0)
+	end
+	
 	if (numberOfObjects==nil) or (dynamicLoading==false) then
 		return
 	end
@@ -242,6 +252,12 @@ end
 
 function sysCall_init()
     -- simRemoteApi.start(19999,1300,true) -- if using different port
+
+	-- Lighting strength parameters
+	sim.setFloatSignal('AmbientStrength',0.3) -- 0-1
+	sim.setFloatSignal('DiffuseStrength',0.7)
+	sim.setFloatSignal('SpecularStrength',0.7)
+	sim.setFloatSignal('SpecularPower',5.0)
 	
 	-- Initalize all possible signals 
     sim.setIntegerSignal('L_Trigger_Press',0) -- set up string signal to transfer button state
@@ -290,9 +306,17 @@ function sysCall_init()
 	sim.setFloatSignal('R_Joystick_pos_z',0)
 	
 	dynamicLoading = false
+	goodRendering = false
 	if (sim.getScriptSimulationParameter(sim.handle_self, "Enable_dynamic_objects_loading")==true) then
 		dynamicLoading = true
 		print("Dynamic object loading is activated")
+	end
+	if (sim.getScriptSimulationParameter(sim.handle_self, "High_quality_render")==true) then
+		goodRendering = true
+		sim.setIntegerSignal("High_quality_render",1)
+		print("The good rendering is activated")
+	else
+		sim.setIntegerSignal("High_quality_render",0)
 	end
 	sim.setIntegerSignal('dynamic_load_request',0)
 end

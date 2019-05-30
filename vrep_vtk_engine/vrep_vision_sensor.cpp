@@ -38,6 +38,8 @@
 #include <fstream>
 #include <vtkMatrix4x4.h>
 #include <vtkFloatArray.h>
+#include <vtkProperty.h>
+
 void vrep_vision_sensor::updatePosition() {
 	this->updatePose();
 	invPose->DeepCopy(pose);
@@ -164,7 +166,7 @@ void vrep_vision_sensor::transferImageTexture() {
 	image->ShallowCopy(filter->GetOutput());
 	image->Modified();
 	for (int i = 0; i < extraImages.size(); i++) {
-		extraImages[i]->ShallowCopy(filter->GetOutput());
+		extraImages[i]->DeepCopy(filter->GetOutput());
 		extraImages[i]->Modified();
 	}
 }
@@ -190,6 +192,7 @@ void vrep_vision_sensor::activate(double scale[]) {
 
 	transformFilter->SetTransform(transform);
 	planeMapper->SetInputConnection(transformFilter->GetOutputPort());
+	planeMapper->Update();
 
 	panel->SetMapper(planeMapper);
 	renderer->SetBackground(0.0, 0.0, 0.0);
@@ -235,6 +238,11 @@ vtkSmartPointer<vtkActor> vrep_vision_sensor::getNewactor() {
 	newActor->SetTexture(newTexture);
 
 	newActor->SetUserTransform(pose2); // this took long
+
+	newActor->GetProperty()->SetAmbient(0.6);
+	newActor->GetProperty()->SetDiffuse(0.4);
+	newActor->GetProperty()->SetSpecular(1.0);
+	newActor->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
 	newActor->Modified();
 	return newActor;
 }

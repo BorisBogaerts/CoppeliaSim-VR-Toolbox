@@ -61,7 +61,7 @@ stereoPanorama_renderwindow_support::stereoPanorama_renderwindow_support(int cid
 	simxFloat *data;
 	simxInt dataLength;
 
-	simxGetObjectHandle(clientID, (simxChar*)"Stereo_omnidirectional_camera", &handle, simx_opmode_blocking);
+	simxGetObjectHandle(clientID, (simxChar*)"VR360_cam", &handle, simx_opmode_blocking);
 
 	vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
 	vtkFileOutputWindow* fow = vtkFileOutputWindow::New();
@@ -95,19 +95,12 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 	vrepScene->vrep_get_object_pose();
 	for (int k = 0; k < vr_camera.size(); k++) {
 		for (int i = 0; i < vrepScene->getNumActors(); i++) {
-			vtkSmartPointer<vtkActor> temp;
 			if (k == 0) {
-				temp = vrepScene->getActor(i);
+				renderer[k]->AddActor(vrepScene->getActor(i));
 			}
 			else {
-				temp = vrepScene->getNewActor(i);
+				renderer[k]->AddActor(vrepScene->getNewActor(i));
 			}
-			temp->PickableOff();
-			temp->GetProperty()->SetAmbient(0.6);
-			temp->GetProperty()->SetDiffuse(0.4);
-			temp->GetProperty()->SetSpecular(1.0);
-			temp->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
-			renderer[k]->AddActor(temp);
 			if (k == 0) {
 				visibilityLayer.push_back((std::bitset<16>)vrepScene->getVisibilityLayer(i));
 			}
@@ -129,7 +122,14 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 			else {
 				grid = nullptr;
 			}
-
+			for (int i = 0; i < vrepScene->getNumberOfLights(); i++) {
+				if (k == 0) {
+					renderer[k]->AddLight(vrepScene->getLight(i));
+				}
+				else {
+					renderer[k]->AddLight(vrepScene->getNewLight(i));
+				}
+			}
 	}
 }
 
@@ -164,41 +164,6 @@ void stereoPanorama_renderwindow_support::updatePose() {
 	}
 }
 
-void stereoPanorama_renderwindow_support::readLights() {
-	simxInt *dataInt;
-	simxFloat *dataFloat;
-	simxInt dataFloatLength;
-	simxInt dataIntLength;
-
-	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getLightInfo"
-		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataIntLength, &dataInt, &dataFloatLength, &dataFloat, NULL, NULL, NULL, NULL, simx_opmode_blocking);
-	vtkSmartPointer<vtkLight> light;
-	vtkSmartPointer<vtkTransform> tform;
-	for (int k = 0; k < vr_camera.size(); k++) {
-		for (int i = 0; i < dataInt[0]; i++) {
-			light = vtkSmartPointer<vtkLight>::New();
-			tform = vtkSmartPointer<vtkTransform>::New();
-
-			tform->PostMultiply();
-			tform->Identity();
-			tform->RotateZ((dataFloat[(i * 12) + 5] * 180 / 3.1415));
-			tform->RotateY((dataFloat[(i * 12) + 4] * 180 / 3.1415));
-			tform->RotateX((dataFloat[(i * 12) + 3] * 180 / 3.1415));
-			tform->Translate(dataFloat[(i * 12)], dataFloat[(i * 12) + 1], dataFloat[(i * 12) + 2]);
-			tform->RotateX(-90);
-			tform->Modified();
-			light->SetPosition(0, 0, 0);
-			light->SetFocalPoint(0, 0, 1);
-
-			light->SetDiffuseColor(dataFloat[(i * 12) + 6], dataFloat[(i * 12) + 7], dataFloat[(i * 12) + 8]);
-			light->SetSpecularColor(dataFloat[(i * 12) + 9], dataFloat[(i * 12) + 10], dataFloat[(i * 12) + 11]);
-			light->SetFocalPoint(0, 0, 1);
-			light->SetConeAngle(180.0);
-			light->SetTransformMatrix(tform->GetMatrix());
-			renderer[k]->AddLight(light);
-		}
-	}
-}
 
 void stereoPanorama_renderwindow_support::dynamicAddObjects() {
 	int result;
@@ -232,14 +197,13 @@ void stereoPanorama_renderwindow_support::syncData() {
 }
 
 
-void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, bool top, int k) {
+void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, bool top, int k, int width, int height) {
 	vtkSmartPointer<vtkImageAppend> horizontal = vtkSmartPointer<vtkImageAppend>::New();
 	vtkSmartPointer<vtkExtractVOI> extractVOI;
 	vtkSmartPointer<vtkTransform> prePose = vtkSmartPointer<vtkTransform>::New();
-
-	int width = 4096;
 	int temp = 1;
 	width = width / temp;
+	dist = dist / 2;
 	if (left) {
 		dist = -dist;
 	}
@@ -247,6 +211,8 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 	if (top) {
 		angle = 45;
 	}
+	vr_renderWindowInteractor[k]->Render();
+	height = ((int)(height / 4)) - 1; // 0 based counting
 	for (int i = 0; i < width; i++) {
 		extractVOI = vtkSmartPointer<vtkExtractVOI>::New();
 		prePose->Identity();
@@ -267,7 +233,7 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		filter[k]->ReadFrontBufferOff();
 		filter[k]->Update();
 		extractVOI->SetInputConnection(filter[k]->GetOutputPort());
-		extractVOI->SetVOI(60, 60, 0, 767, 0, 0);
+		extractVOI->SetVOI(60, 60, 0, height, 0, 0);
 		extractVOI->Update();
 		locked = false;
 		horizontal->AddInputData(extractVOI->GetOutput());
@@ -284,10 +250,22 @@ std::string ExePath() {
 }
 
 void stereoPanorama_renderwindow_support::activate_interactor() {
+	// Get all necessary parameters
+	simxInt *data;
+	simxInt dataLength;
+	simxCallScriptFunction(clientID, (simxChar*)"VR360_cam", sim_scripttype_childscript, (simxChar*)"getParams"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataLength, &data, 0, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	int core, width, height;
+	core = data[0];
+	height = data[1];
+	width = data[2];
+
+	// Standard things
 	vrepScene->vrep_get_object_pose();
 	updatePose();
-	activateMainCam(); // shader that combines images
-	readLights();
+
+	// Make renderers etc
+	activateMainCam((int)(height/4)); // rendered in 4 seperate slices
 
 	if ((grid != nullptr) && (vrepScene->isVolumePresent())) {
 		cout << "Volume detected and connected" << endl;
@@ -303,6 +281,7 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 	fileName.append("\\imageTransfer.png");
 	//vrepScene->vol->toggleMode();
 	cout << "Temporary file save location : " << fileName << endl;
+	
 	while (true) {
 		for (int i = 0; i < 2; i++) {
 			if (vrepScene->startVisionSensorThread()) { // if vision sensor
@@ -315,28 +294,34 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 			path->update();
 			dynamicAddObjects(); // see if there are new objects in the scene, if so add them
 		}
-		
-		for (int k = 0; k < vr_camera.size(); k++) {
-			renderWindow[k]->Render();
+		int trigger;
+		simxGetIntegerSignal(clientID, "TriggerVR360", &trigger,simx_opmode_blocking);
+		if (trigger == 0) {
+			continue; 
 		}
 		vtkSmartPointer<vtkImageAppend> vertical = vtkSmartPointer<vtkImageAppend>::New();
 		vertical->SetAppendAxis(1);
 		cout << "Started rendering image" << endl;
 		clock_t begin = clock();
-		// SPEED!!!!
-		concurrency::parallel_invoke(
-		[&] { renderStrip(0.035, false, false, 0); },
-		[&] { renderStrip(0.035, false, true, 1); },
-		[&] { renderStrip(0.035, true, false, 2); },
-		[&] { renderStrip(0.035, true, true, 3); }
-		);
-
-		// No speed
-	/*	renderStrip(0.035, false, false, 0);
-		renderStrip(0.035, false, true, 1);
-		renderStrip(0.035, true, false, 2);
-		renderStrip(0.035, true, true, 3);*/
-
+		
+		float IPD;
+		simxGetFloatSignal(clientID, "IPD", &IPD, simx_opmode_blocking);
+		if (core == 1) {
+			// SPEED!!!!
+			concurrency::parallel_invoke(
+				[&] { renderStrip(IPD, false, false, 0, width, height); },
+				[&] { renderStrip(IPD, false, true, 1, width, height); },
+				[&] { renderStrip(IPD, true, false, 2, width, height); },
+				[&] { renderStrip(IPD, true, true, 3, width, height); }
+			);
+		}
+		else {
+			// No speed
+			renderStrip(IPD, false, false, 0, width, height);
+			renderStrip(IPD, false, true, 1, width, height);
+			renderStrip(IPD, true, false, 2, width, height);
+			renderStrip(IPD, true, true, 3, width, height);
+		}
 		for (int i = 0; i < 4; i++) {
 			vertical->AddInputData(slice[i]); // top left
 		}
@@ -345,11 +330,11 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		wr->SetInputConnection(vertical->GetOutputPort());
 		wr->Write();
 
-		simxCallScriptFunction(clientID, (simxChar*)"Stereo_omnidirectional_camera", sim_scripttype_childscript, (simxChar*)"setVisionSensorImage"
+		simxCallScriptFunction(clientID, (simxChar*)"VR360_cam", sim_scripttype_childscript, (simxChar*)"setVisionSensorImage"
 			, 0, NULL, 0, NULL, fileName.size(), fileName.c_str(), 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-		cout << "Finished rendering image in " << elapsed_secs << " seconds" << endl;
+		cout << "Finished rendering image in " << elapsed_secs << " seconds (waiting for your next trigger)" << endl;
 
 		if (simxGetLastCmdTime(clientID) <= 0) {
 			for (int k = 0; k < vr_camera.size(); k++) {
@@ -360,7 +345,7 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 	}
 }
 
-void stereoPanorama_renderwindow_support::activateMainCam() {
+void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 	for (int k = 0; k < vr_camera.size(); k++) {
 		vr_camera[k]->SetViewAngle(90.0);
 		vr_camera[k]->SetPosition(0, 0, 0);
@@ -369,17 +354,19 @@ void stereoPanorama_renderwindow_support::activateMainCam() {
 		vr_camera[k]->SetModelTransformMatrix(pose[k]->GetMatrix());
 		// Classical vtk pipeline to set up renderwindow etc with extra options
 		renderer[k]->SetActiveCamera(vr_camera[k]);
-		renderer[k]->UseShadowsOff();
+		renderer[k]->UseShadowsOn();
+		renderer[k]->SetTwoSidedLighting(false);
 		renderer[k]->LightFollowCameraOff();
 		renderer[k]->AutomaticLightCreationOff();
 		renderer[k]->UseDepthPeelingForVolumesOn();
 		renderer[k]->SetMaximumNumberOfPeels(0);
 		renderer[k]->Modified();
 		renderWindow[k]->AddRenderer(renderer[k]);
-		renderWindow[k]->SetSize(121.0, 768.0); // make shure we have a 'middle' pixel
+
+		renderWindow[k]->SetSize(121.0, height); // make shure we have a 'middle' pixel
 		renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
-		//renderWindow[k]->SetDesiredUpdateRate(2000.0);
+		renderWindow[k]->SetDesiredUpdateRate(10000.0);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
 		vr_renderWindowInteractor[k]->Initialize();
 		filter[k]->SetInput(renderWindow[k]);

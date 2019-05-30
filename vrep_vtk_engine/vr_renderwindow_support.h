@@ -69,7 +69,6 @@ public:
 	bool isReady() { return dataReady; };
 	void setNotReady() { dataReady = false; };
 
-	void readLights();
 	void syncData();
 	void discoverDevices();
 	void synchronizeDevices();

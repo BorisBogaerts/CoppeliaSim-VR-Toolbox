@@ -98,6 +98,7 @@ private:
 	vtkSmartPointer<vtkOpenGLTexture> texture2 = vtkSmartPointer<vtkOpenGLTexture>::New();
 	vtkSmartPointer<vtkImageData> image = vtkSmartPointer<vtkImageData>::New();
 	std::vector<vtkSmartPointer<vtkImageData>> extraImages;
+	std::vector<vtkSmartPointer<vtkTexture>> extraTextures;
 	vtkSmartPointer<vtkTransform> pose2;
 
 	vtkSmartPointer<vtkTransformFilter > ptsT = vtkSmartPointer<vtkTransformFilter >::New();

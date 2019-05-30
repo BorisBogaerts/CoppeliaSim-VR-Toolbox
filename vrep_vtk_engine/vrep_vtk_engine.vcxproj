@@ -139,6 +139,7 @@
     <ClCompile Include="stereoPanorama_renderwindow_support.cpp" />
     <ClCompile Include="timerClass.cpp" />
     <ClCompile Include="vrep_controlled_object.cpp" />
+    <ClCompile Include="vrep_light.cpp" />
     <ClCompile Include="vrep_mesh_object.cpp" />
     <ClCompile Include="vrep_mesh_reader.cpp" />
     <ClCompile Include="vrep_scene_content.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="stereoPanorama_renderwindow_support.h" />
     <ClInclude Include="timerClass.h" />
     <ClInclude Include="vrep_controlled_object.h" />
+    <ClInclude Include="vrep_light.h" />
     <ClInclude Include="vrep_mesh_object.h" />
     <ClInclude Include="vrep_mesh_reader.h" />
     <ClInclude Include="vrep_scene_content.h" />

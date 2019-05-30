@@ -47,6 +47,9 @@
 #include <vtkCallbackCommand.h>
 #include <vtkOutputWindow.h>
 #include <vtkFileOutputWindow.h>
+#include <vtkOBJImporter.h>
+#include <vtkActorCollection.h>
+#include <vtkPolyDataMapper.h>
 // Sorry this is purely vtk's fault, stupid function handles etc
 class miniClass {
 public:
@@ -193,11 +196,6 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 
 	vrepScene->vrep_get_object_pose();
 	for (int i = 0; i < vrepScene->getNumActors(); i++) {
-		vrepScene->getActor(i)->PickableOff();
-		vrepScene->getActor(i)->GetProperty()->SetAmbient(0.6);
-		vrepScene->getActor(i)->GetProperty()->SetDiffuse(0.4);
-		vrepScene->getActor(i)->GetProperty()->SetSpecular(0.5);
-		vrepScene->getActor(i)->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
 		renderer->AddActor(vrepScene->getActor(i));
 		visibilityLayer.push_back((std::bitset<16>)vrepScene->getVisibilityLayer(i));
 	}
@@ -205,6 +203,11 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	for (int i = 0; i < vrepScene->getNumRenders(); i++) {
 		renderer->AddActor(vrepScene->getPanelActor(i));
 	}
+	for (int i = 0; i < vrepScene->getNumberOfLights(); i++) {
+		renderer->AddLight(vrepScene->getLight(i));
+		//renderer->AddViewProp(vrepScene->getLightActor(i));
+	}
+
 	if (vrepScene->isVolumePresent()) {
 		renderer->AddViewProp(vrepScene->getVolume());
 		grid = vrepScene->vol;
@@ -215,39 +218,6 @@ void vr_renderwindow_support::addVrepScene(vrep_scene_content *vrepSceneIn) {
 	}
 }
 
-void vr_renderwindow_support::readLights() {
-	simxInt *dataInt;
-	simxFloat *dataFloat;
-	simxInt dataFloatLength;
-	simxInt dataIntLength;
-
-	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getLightInfo"
-		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataIntLength, &dataInt, &dataFloatLength, &dataFloat, NULL, NULL, NULL, NULL, simx_opmode_blocking);
-	vtkSmartPointer<vtkLight> light;
-	vtkSmartPointer<vtkTransform> tform;
-	for (int i = 0; i < dataInt[0]; i++) {
-		light = vtkSmartPointer<vtkLight>::New();
-		tform = vtkSmartPointer<vtkTransform>::New();
-
-		tform->PostMultiply();
-		tform->Identity();
-		tform->RotateZ((dataFloat[(i * 12) + 5] * 180 / 3.1415));
-		tform->RotateY((dataFloat[(i * 12) + 4] * 180 / 3.1415));
-		tform->RotateX((dataFloat[(i * 12) + 3] * 180 / 3.1415));
-		tform->Translate(dataFloat[(i * 12)], dataFloat[(i * 12) + 1], dataFloat[(i * 12) + 2]);
-		tform->RotateX(-90);
-		tform->Modified();
-		light->SetPosition(0, 0, 0);
-		light->SetFocalPoint(0, 0, 1);
-
-		light->SetDiffuseColor(dataFloat[(i * 12) + 6], dataFloat[(i * 12) + 7], dataFloat[(i * 12) + 8]);
-		light->SetSpecularColor(dataFloat[(i * 12) + 9], dataFloat[(i * 12) + 10], dataFloat[(i * 12) + 11]);
-		light->SetFocalPoint(0, 0, 1);
-		light->SetConeAngle(180.0);
-		light->SetTransformMatrix(tform->GetMatrix());
-		renderer->AddLight(light);
-	}
-}
 
 void vr_renderwindow_support::dynamicAddObjects() {
 	int result;
@@ -438,18 +408,22 @@ void vr_renderwindow_support::activate_interactor() {
 		renderer->SetGradientBackground(true);
 	}
 
-	renderer->SetAutomaticLightCreation(true);
-	renderer->LightFollowCameraOn();
 	
-	//renderer->ligt
-	readLights();
-	//renderer->UseShadowsOff();
+	renderer->SetAmbient(0.4, 0.4, 0.4);
 	renderer->Modified();
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetMultiSamples(0);
 	renderWindow->SetDesiredUpdateRate(90.0);
 	
-	//renderWindow->SetTrackHMD(true);
+	renderer->LightFollowCameraOn();
+	renderer->AutomaticLightCreationOff();
+	int goodRender;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_blocking); // whatever this is
+	if (goodRender == 1) {
+		renderer->UseShadowsOn();
+	}
+	renderer->TwoSidedLightingOff();
+	renderWindow->SetTrackHMD(true);
 	renderWindow->Initialize();
 
 	vr_renderWindowInteractor->SetRenderWindow(renderWindow);

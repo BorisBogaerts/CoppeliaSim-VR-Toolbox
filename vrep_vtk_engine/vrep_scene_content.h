@@ -45,6 +45,8 @@
 #include "vrep_vision_sensor.h"
 #include <vtkPoints.h>
 #include <vtkCameraActor.h>
+#include "vrep_light.h"
+#include <vtkLightActor.h>
 
 #include <vtkOpenVRRenderWindowInteractor.h>
 #include <vtkOpenVRRenderWindow.h>
@@ -77,6 +79,10 @@ public:
 	vtkSmartPointer<vtkVolume> getVolume() { return volume; };
 	vtkSmartPointer<vtkActor> getPanelActor(int i) { return camsContainer[i].getActor(); };
 	vtkSmartPointer<vtkActor> getNewPanelActor(int i) { return camsContainer[i].getNewactor(); };
+	vtkSmartPointer<vtkLight> getLight(int i) { return lights[i].getLight(); };
+	vtkSmartPointer<vtkLightActor> getLightActor(int i) { return lights[i].getActor(); };
+	vtkSmartPointer<vtkLight>getNewLight(int i) { return lights[i].getNewLight(); }
+	int getNumberOfLights() { return lights.size(); };
 	float computeScalarField();
 	bool isVolumePresent() { return volumePresent; };
 	void loadCams();
@@ -109,6 +115,7 @@ protected:
 	std::vector<vrep_vision_sensor> camsContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer;
 	std::vector<vrep_mesh_object> vrepMeshContainer2;
+	std::vector<vrep_light> lights;
 	int meshH;
 
 	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();

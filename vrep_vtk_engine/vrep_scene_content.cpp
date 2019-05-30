@@ -93,6 +93,27 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 		}
 	}
 	cout << "Number of objects loaded : " << vrepMeshContainer.size() << endl;		
+
+	// read lights
+	simxInt *dataInt;
+	simxFloat *dataFloat;
+	simxInt dataFloatLength;
+	simxInt dataIntLength;
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getLightInfo"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &dataIntLength, &dataInt, &dataFloatLength, &dataFloat, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+	for (int i = 0; i < dataInt[0]; i++) {
+		vrep_light newl(dataInt[i+1], refHandle, clientID);
+		lights.push_back(newl);
+		float color1[3] = { dataFloat[(i*11)] ,dataFloat[(i*11) + 1] ,dataFloat[(i*11) + 2] };
+		float color2[3] = { dataFloat[(i * 11)+3] ,dataFloat[(i * 11) + 4] ,dataFloat[(i * 11) + 5] };
+		float angle = dataFloat[(i * 11) + 6];
+		float exponent = dataFloat[(i * 11) + 7];
+		float constAtten = dataFloat[(i * 11) + 8];
+		float linAtten = dataFloat[(i * 11) + 9];
+		float quadAtten = dataFloat[(i * 11) + 10];
+		lights.back().createLight(color1, color2, angle, exponent,constAtten,linAtten,quadAtten);
+		cout << "Added light, angle : " << angle << endl;
+	}
 }
 
 void vrep_scene_content::dynamicLoad() {
@@ -197,7 +218,7 @@ void vrep_scene_content::loadCams() {
 				if (add) {
 					vtkSmartPointer<vtkActor> tempAct = vrepMeshContainer2[k].getActor();
 					tempAct->PickableOff();
-					
+					tempAct->GetProperty()->SetOpacity(1.0);
 					camsContainer[camsContainer.size() - 1].getRenderer()->AddActor(tempAct); // do not add this to the renders
 				}
 				if (setPanel) {
@@ -230,9 +251,11 @@ vtkSmartPointer<vtkActor> vrep_scene_content::getActor2(int i) {
 	return vrepMeshContainer2[i].getActor();
 }
 
+
 int vrep_scene_content::getNumActors() {
 	return vrepMeshContainer.size();
 }
+
 
 void vrep_scene_content::updateMainCamObjectPose() {
 	for (int i = 0; i < vrepMeshContainer.size(); i++) {
@@ -240,6 +263,9 @@ void vrep_scene_content::updateMainCamObjectPose() {
 	}
 	for (int i = 0; i < camsContainer.size(); i++) {
 		camsContainer[i].updatePosition();
+	}
+	for (int i = 0; i < lights.size(); i++) {
+		lights[i].updatePose();
 	}
 }
 

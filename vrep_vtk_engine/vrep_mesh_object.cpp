@@ -74,6 +74,7 @@ void vrep_mesh_object::extractDataFromReader(vrep_mesh_reader reader) {
 
 void vrep_mesh_object::makeActor() {
 	vrep_polyData_mapper->SetInputData(meshData);
+	vrep_polyData_mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 	vrep_mesh_actor->SetMapper(vrep_polyData_mapper);
 
 	if (texturedObject) {
@@ -113,7 +114,38 @@ void vrep_mesh_object::makeActor() {
 		vrep_mesh_actor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
 		vrep_mesh_actor->GetProperty()->SetOpacity(vrep_mesh_opacity);
 	};
+	int goodRender;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_blocking); // whatever this is
+	if (goodRender == 1) {
+		vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
+		cleanPolyData->SetInputData(meshData);
+		cleanPolyData->Update();
+
+		vtkSmartPointer<vtkPolyDataNormals> normalGenerator = vtkSmartPointer<vtkPolyDataNormals>::New();
+		normalGenerator->SetInputData(cleanPolyData->GetOutput());
+		normalGenerator->ComputePointNormalsOn();
+		normalGenerator->ComputeCellNormalsOn();
+		normalGenerator->Update();
+		meshData->DeepCopy(normalGenerator->GetOutput());
+		meshData->Modified();
+	}
+	
 	vrep_mesh_actor->SetUserTransform(pose);
+	vrep_mesh_actor->PickableOff();
+	float ambientStrength, specularStrength, diffuseStrength, specularPower;
+	simxGetFloatSignal(clientID, "AmbientStrength", &ambientStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "DiffuseStrength", &specularStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularStrength", &diffuseStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularPower", &specularPower, simx_opmode_streaming);
+
+	vrep_mesh_actor->GetProperty()->SetAmbient(ambientStrength);
+	vrep_mesh_actor->GetProperty()->SetDiffuse(specularStrength);
+	vrep_mesh_actor->GetProperty()->SetSpecular(diffuseStrength);
+	vrep_mesh_actor->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
+	vrep_mesh_actor->GetProperty()->SetSpecularPower(specularPower);
+	if (goodRender == 1) {
+		vrep_mesh_actor->GetProperty()->SetInterpolationToPhong();
+	}
 };
 
 vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
@@ -121,7 +153,7 @@ vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
 	vtkSmartPointer<vtkPolyDataMapper> newPM = vtkSmartPointer<vtkPolyDataMapper>::New();
 	vtkSmartPointer<vtkPolyData> PD = vtkSmartPointer<vtkPolyData>::New();
 	newPM->SetLookupTable(vrep_polyData_mapper->GetLookupTable());
-	PD->ShallowCopy(meshData);
+	PD->DeepCopy(meshData);
 	//PD->GetPointData()->SetScalars(meshData->GetPointData()->GetScalars()); // if visibility computation
 	newPM->SetInputData(PD);
 	newActor->SetMapper(newPM);
@@ -143,6 +175,21 @@ vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
 	newActor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
 	newActor->GetProperty()->SetOpacity(vrep_mesh_opacity);
 	newActor->SetUserTransform(pose);
+	newActor->PickableOff();
+
+	float ambientStrength, specularStrength, diffuseStrength, specularPower;
+	simxGetFloatSignal(clientID, "AmbientStrength", &ambientStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "DiffuseStrength", &specularStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularStrength", &diffuseStrength, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularPower", &specularPower, simx_opmode_streaming);
+
+	newActor->GetProperty()->SetAmbient(ambientStrength);
+	newActor->GetProperty()->SetDiffuse(specularStrength);
+	newActor->GetProperty()->SetSpecular(diffuseStrength);
+	newActor->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
+	newActor->GetProperty()->SetSpecularPower(specularPower);
+
+	newActor->GetProperty()->SetInterpolationToPhong();
 	return newActor;
 }
 
