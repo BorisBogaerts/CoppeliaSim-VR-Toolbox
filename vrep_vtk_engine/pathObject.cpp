@@ -84,7 +84,7 @@ void pathObject::update() {
 		simxInt succes;
 		simxUChar *str;
 		simxInt signalLength;
-		succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_buffer);
+		succes = simxGetStringSignal(clientID, (simxChar*)"path", &str, &signalLength, simx_opmode_streaming);
  		if (succes == simx_return_ok) {
 			signalLength = (int)(signalLength / 4);
 			if (signalLength > prevLength) {
@@ -116,6 +116,8 @@ void pathObject::update() {
 			}
 			else {
 				memcpy(points->GetVoidPointer(0), (float*)str, signalLength * sizeof(float)); // for if somebody else changed the path, some optimizer maybe?
+				points->Modified();
+				polyData->Modified();
 			}
 		}
 		return;

@@ -346,6 +346,9 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 }
 
 void stereoPanorama_renderwindow_support::activateMainCam(int height) {
+	int goodRender;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_blocking); // whatever this is
+
 	for (int k = 0; k < vr_camera.size(); k++) {
 		vr_camera[k]->SetViewAngle(90.0);
 		vr_camera[k]->SetPosition(0, 0, 0);
@@ -354,12 +357,15 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 		vr_camera[k]->SetModelTransformMatrix(pose[k]->GetMatrix());
 		// Classical vtk pipeline to set up renderwindow etc with extra options
 		renderer[k]->SetActiveCamera(vr_camera[k]);
-		renderer[k]->UseShadowsOn();
+		if (goodRender == 1) {
+			renderer[k]->UseShadowsOn();
+		}
 		renderer[k]->SetTwoSidedLighting(false);
 		renderer[k]->LightFollowCameraOff();
 		renderer[k]->AutomaticLightCreationOff();
-		renderer[k]->UseDepthPeelingForVolumesOn();
-		renderer[k]->SetMaximumNumberOfPeels(0);
+		//renderer[k]->UseDepthPeelingForVolumesOn();
+		//renderer[k]->SetMaximumNumberOfPeels(0);
+		//renderer[k]->SetUseDepthPeeling(true);
 		renderer[k]->Modified();
 		renderWindow[k]->AddRenderer(renderer[k]);
 
@@ -367,6 +373,8 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 		renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
 		renderWindow[k]->SetDesiredUpdateRate(10000.0);
+		//renderWindow[k]->SetAlphaBitPlanes(true);
+		//renderWindow[k]->SetMultiSamples(0);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
 		vr_renderWindowInteractor[k]->Initialize();
 		filter[k]->SetInput(renderWindow[k]);

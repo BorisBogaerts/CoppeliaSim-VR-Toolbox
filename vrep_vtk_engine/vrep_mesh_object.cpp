@@ -115,7 +115,7 @@ void vrep_mesh_object::makeActor() {
 		vrep_mesh_actor->GetProperty()->SetOpacity(vrep_mesh_opacity);
 	};
 	int goodRender;
-	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_blocking); // whatever this is
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
 	if (goodRender == 1) {
 		vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
 		cleanPolyData->SetInputData(meshData);
