@@ -1,5 +1,5 @@
 # V-REP-VR-Toolbox
-This repository containt virtual reality tools for VREP. V-REP is a robotics simulation software package that is available here: http://www.coppeliarobotics.com/
+This repository contains virtual reality tools for VREP. V-REP is a robotics simulation software package that is available here: http://www.coppeliarobotics.com/
 
 Currently two tools are available
 - V-REP-VR-Interface
@@ -31,7 +31,7 @@ The interface has the following capabilities:
 - Add a customizable menu in VR that when menu items are selected, triggers the execution of V-REP scripts.
 - Visibility layers are respected, which allows for the possibility of hiding objects.
 
-#VR 360 cam
+# VR 360 cam
 This tool renders omnidirectional stereo images for a V-REP vision sensor. You don't need any physical VR device to use this tool (only to view the result). The theory behind this rendering process is exelently explained here : https://developers.google.com/vr/jump/rendering-ods-content.pdf.
 
 To use this tool, import the VR360_cam.ttm model in your V-REP scene. Next launch VR360_cam.exe (maybe as administrator, a file is saved in the location of the .exe file, this action could require administrator privileges). 
