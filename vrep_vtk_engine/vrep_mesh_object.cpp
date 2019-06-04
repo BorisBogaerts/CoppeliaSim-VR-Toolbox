@@ -116,7 +116,7 @@ void vrep_mesh_object::makeActor() {
 	};
 	int goodRender;
 	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
-	if (goodRender == 1) {
+	//if (goodRender == 1) {
 		vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
 		cleanPolyData->SetInputData(meshData);
 		cleanPolyData->Update();
@@ -128,7 +128,7 @@ void vrep_mesh_object::makeActor() {
 		normalGenerator->Update();
 		meshData->DeepCopy(normalGenerator->GetOutput());
 		meshData->Modified();
-	}
+	//}
 	
 	vrep_mesh_actor->SetUserTransform(pose);
 	vrep_mesh_actor->PickableOff();

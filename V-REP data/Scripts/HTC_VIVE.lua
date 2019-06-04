@@ -256,7 +256,7 @@ function sysCall_init()
 	-- Lighting strength parameters
 	sim.setFloatSignal('AmbientStrength',0.3) -- 0-1
 	sim.setFloatSignal('DiffuseStrength',0.7)
-	sim.setFloatSignal('SpecularStrength',0.7)
+	sim.setFloatSignal('SpecularStrength',0.3)
 	sim.setFloatSignal('SpecularPower',5.0)
 	
 	-- Initalize all possible signals 
