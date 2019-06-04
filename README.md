@@ -1,8 +1,17 @@
+# V-REP-VR-Toolbox
+This repository containt virtual reality tools for VREP. V-REP is a robotics simulation software package that is available here: http://www.coppeliarobotics.com/
+
+Currently two tools are available
+- V-REP-VR-Interface
+- VR 360 cam (omnidirectional stereo renderer)
+
 # V-REP-VR-Interface
 This repository contains the code to experience V-REP in VR. It can visualize V-REP scenes in openvr compatible devices (HTC-VIVE and HTC-VIVE Pro are tested) and return user manipulations to V-REP. It is also able to visualize the coverage of camera systems (later more).
 
 Installation instructions and a feature overview is now also available in a youtube video:
 https://www.youtube.com/watch?v=_GXVdgihVgQ
+An update video of new features in V2 and V2.1 is also available:
+https://youtu.be/ozam2Ew7RdA
 
 Some Youtube videos showing the interface in action:
 - https://www.youtube.com/watch?v=yMydjviF7yg
@@ -21,6 +30,18 @@ The interface has the following capabilities:
 - Import standard interactions as dummies, that can be attatched to controllers
 - Add a customizable menu in VR that when menu items are selected, triggers the execution of V-REP scripts.
 - Visibility layers are respected, which allows for the possibility of hiding objects.
+
+#VR 360 cam
+This tool renders omnidirectional stereo images for a V-REP vision sensor. You don't need any physical VR device to use this tool (only to view the result). The theory behind this rendering process is exelently explained here : https://developers.google.com/vr/jump/rendering-ods-content.pdf.
+
+To use this tool, import the VR360_cam.ttm model in your V-REP scene. Next launch VR360_cam.exe (maybe as administrator, a file is saved in the location of the .exe file, this action could require administrator privileges). 
+This process is demonstrated at the end of this video https://youtu.be/ozam2Ew7RdA.
+
+Note that the HTC_VIVE.ttm model must be in the V-REP scene to do this (you don't need a VIVE for this to work).
+
+Currently the performance is quite decent 1 image in a complex scene renders in approximately 15 seconds (requires 16.384 individual renders, approx 1100 fps).
+
+If you make a video by composing multiple images, do not forget to inject the correct metadata https://github.com/google/spatial-media/releases for it to be interpreted correctly.
 
 # Installation (easy)
 Installation instructions are now also available on youtube: https://www.youtube.com/watch?v=_GXVdgihVgQ
