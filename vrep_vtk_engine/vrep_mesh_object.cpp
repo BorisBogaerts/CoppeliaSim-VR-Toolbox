@@ -113,10 +113,6 @@ void vrep_mesh_object::makeActor() {
 	else {
 		vrep_mesh_actor->GetProperty()->SetColor(vrep_mesh_color[0], vrep_mesh_color[1], vrep_mesh_color[2]);
 		vrep_mesh_actor->GetProperty()->SetOpacity(vrep_mesh_opacity);
-	};
-	int goodRender;
-	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
-	//if (goodRender == 1) {
 		vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
 		cleanPolyData->SetInputData(meshData);
 		cleanPolyData->Update();
@@ -125,10 +121,13 @@ void vrep_mesh_object::makeActor() {
 		normalGenerator->SetInputData(cleanPolyData->GetOutput());
 		normalGenerator->ComputePointNormalsOn();
 		normalGenerator->ComputeCellNormalsOn();
+		normalGenerator->ConsistencyOn();
 		normalGenerator->Update();
 		meshData->DeepCopy(normalGenerator->GetOutput());
 		meshData->Modified();
-	//}
+	};
+	int goodRender;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
 	
 	vrep_mesh_actor->SetUserTransform(pose);
 	vrep_mesh_actor->PickableOff();

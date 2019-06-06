@@ -423,9 +423,10 @@ void vr_renderwindow_support::activate_interactor() {
 		renderer->UseShadowsOn();
 	}
 	renderer->TwoSidedLightingOff();
-	renderWindow->SetTrackHMD(true);
+	//renderWindow->SetTrackHMD(true);
+	renderWindow->PolygonSmoothingOn();
 	renderWindow->Initialize();
-
+	
 	vr_renderWindowInteractor->SetRenderWindow(renderWindow);
 	vr_renderWindowInteractor->Initialize();
 
