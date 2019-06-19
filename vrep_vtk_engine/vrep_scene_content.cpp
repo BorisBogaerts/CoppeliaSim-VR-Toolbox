@@ -69,6 +69,13 @@ void vrep_scene_content::loadScene(bool doubleScene) {
 	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getVisibleHandles"
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, &numHandles, &handles, NULL, NULL, NULL, NULL, NULL, NULL, simx_opmode_blocking);
 	// read geometry
+	int goodRender;
+	float dump;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
+	simxGetFloatSignal(clientID, "AmbientStrength", &dump, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "DiffuseStrength", &dump, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularStrength", &dump, simx_opmode_streaming);
+	simxGetFloatSignal(clientID, "SpecularPower", &dump, simx_opmode_streaming);
 	int* han = new int[numHandles];
 	for (int i = 0; i < numHandles; i++) {
 		han[i] = handles[i];

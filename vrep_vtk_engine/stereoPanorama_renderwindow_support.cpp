@@ -218,11 +218,13 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		prePose->Identity();
 		prePose->Translate(dist, 0.0, 0.0);
 		prePose->RotateX(angle);
-		prePose->RotateY(180 + 360.0*(float)i / (float)width);
+		prePose->RotateY(180 + (360.0*(float)i / (float)(width-1))); // 0 based counting
 		
+
 		prePose->PreMultiply();
 		pose[k]->PreMultiply();
 		prePose->Concatenate(pose[k]);
+		prePose->Modified();
 		vr_camera[k]->SetModelTransformMatrix(prePose->GetMatrix());
 		vr_camera[k]->Modified();
 		
@@ -349,6 +351,11 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 	int goodRender;
 	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_blocking); // whatever this is
 
+	simxFloat *data;
+	simxInt dataLength;
+	simxCallScriptFunction(clientID, (simxChar*)"HTC_VIVE", sim_scripttype_childscript, (simxChar*)"getEstetics"
+		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_blocking);
+
 	for (int k = 0; k < vr_camera.size(); k++) {
 		vr_camera[k]->SetViewAngle(90.0);
 		vr_camera[k]->SetPosition(0, 0, 0);
@@ -367,6 +374,9 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 		//renderer[k]->SetMaximumNumberOfPeels(0);
 		//renderer[k]->SetUseDepthPeeling(true);
 		renderer[k]->Modified();
+		renderer[k]->SetBackground(data[0], data[1], data[2]);
+		renderer[k]->SetBackground2(data[3], data[4], data[5]);
+		renderer[k]->SetGradientBackground(true);
 		renderWindow[k]->AddRenderer(renderer[k]);
 
 		renderWindow[k]->SetSize(121.0, height); // make shure we have a 'middle' pixel

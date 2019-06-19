@@ -144,12 +144,27 @@ void vrep_mesh_object::makeActor() {
 	vrep_mesh_actor->GetProperty()->SetSpecularPower(specularPower);
 	if (goodRender == 1) {
 		vrep_mesh_actor->GetProperty()->SetInterpolationToPhong();
-	}
+		//if ((vrep_mesh_color[0] == 0) && (vrep_mesh_color[1] == 1) && (vrep_mesh_color[2] == 0)) { // if green set shading to flat
+		//	vrep_mesh_actor->GetProperty()->SetAmbient(1.0);
+		//	vrep_mesh_actor->GetProperty()->SetShading(true);
+		//	vrep_mesh_actor->GetProperty()->SetDiffuse(0.0);
+		//	vrep_mesh_actor->GetProperty()->SetSpecular(0.0);
+		//	//vrep_polyData_mapper->AddShaderReplacement( // strategically replace a few lines of code in the fragment shader.
+		//	//	vtkShader::Fragment,
+		//	//	"//VTK::Coincident::Impl", // this shut put it right after all calculations (so no changes anymore)
+		//	//	true,
+		//	//	"//VTK::Coincident::Impl\n"
+		//	//	"  fragOutput0[0] = 0.0;\n" // kill red
+		//	//	"  fragOutput0[2] = 0.0;\n" // kill green
+		//	//	,
+		//	//	false);
+		//}
+	}	
 };
 
 vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
 	vtkSmartPointer<vtkActor> newActor = vtkSmartPointer<vtkActor>::New();
-	vtkSmartPointer<vtkPolyDataMapper> newPM = vtkSmartPointer<vtkPolyDataMapper>::New();
+	vtkSmartPointer<vtkOpenGLPolyDataMapper> newPM = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
 	vtkSmartPointer<vtkPolyData> PD = vtkSmartPointer<vtkPolyData>::New();
 	newPM->SetLookupTable(vrep_polyData_mapper->GetLookupTable());
 	PD->DeepCopy(meshData);
@@ -188,7 +203,26 @@ vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
 	newActor->GetProperty()->SetSpecularColor(0.25, 0.25, 0.25);
 	newActor->GetProperty()->SetSpecularPower(specularPower);
 
-	newActor->GetProperty()->SetInterpolationToPhong();
+	//if ((vrep_mesh_color[0] == 0) && (vrep_mesh_color[1] == 1) && (vrep_mesh_color[2] == 0)) { // if green set shading to flat
+	//	vrep_mesh_actor->GetProperty()->SetAmbient(1.0);
+	//	vrep_mesh_actor->GetProperty()->SetDiffuse(0.0);
+	//	vrep_mesh_actor->GetProperty()->SetSpecular(0.0);
+	//	vrep_mesh_actor->GetProperty()->SetShading(true);
+	//	//newPM->AddShaderReplacement( // strategically replace a few lines of code in the fragment shader.
+	//	//	vtkShader::Fragment,
+	//	//	"//VTK::Coincident::Impl", // this shut put it right after all calculations (so no changes anymore)
+	//	//	true,
+	//	//	"//VTK::Coincident::Impl\n"
+	//	//	"  fragOutput0[0] = 0.0;\n" // kill red
+	//	//	"  fragOutput0[2] = 0.0;\n" // kill green
+	//	//	,
+	//	//	false);
+	//}
+	int goodRender;
+	simxGetIntegerSignal(clientID, "High_quality_render", &goodRender, simx_opmode_streaming); // whatever this is
+	if (goodRender == 1) {
+		vrep_mesh_actor->GetProperty()->SetInterpolationToPhong();
+	}
 	return newActor;
 }
 
@@ -269,6 +303,7 @@ void vrep_mesh_object::deepCopy(vrep_mesh_object *newObject) {
 	newObject->setClientID(clientID, refHandle);
 	newObject->makeActor();
 }
+
 
 void vrep_mesh_object::setCustomShader() {
 	vtkSmartPointer<vtkCleanPolyData> cleanPolyData = vtkSmartPointer<vtkCleanPolyData>::New();
