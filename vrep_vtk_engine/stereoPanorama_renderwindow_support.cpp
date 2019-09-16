@@ -49,8 +49,13 @@
 #include <vtkOutputWindow.h>
 #include <vtkFileOutputWindow.h>
 #include <vtkPNGWriter.h>
+#include <vtkPNGReader.h>
+#include "vrep_plot_container.h"
+#include <vtkAlgorithmOutput.h>
 
 #define PI 3.14159265
+
+
 
 stereoPanorama_renderwindow_support::stereoPanorama_renderwindow_support(int cid, int ref, int interactor)
 {
@@ -65,7 +70,7 @@ stereoPanorama_renderwindow_support::stereoPanorama_renderwindow_support(int cid
 
 	vtkOutputWindow* ow = vtkOutputWindow::GetInstance();
 	vtkFileOutputWindow* fow = vtkFileOutputWindow::New();
-	fow->SetFileName("debug.log");
+	fow->SetFileName("VR360_debug.log");
 	if (ow)
 	{
 		ow->SetInstance(fow);
@@ -115,7 +120,12 @@ void stereoPanorama_renderwindow_support::addVrepScene(vrep_scene_content *vrepS
 				}
 			}
 			if (vrepScene->isVolumePresent()) {
-				renderer[k]->AddViewProp(vrepScene->getVolume());
+				if (k == 0) {
+					renderer[k]->AddVolume(vrepScene->getVolume());
+				}
+				else {
+					renderer[k]->AddVolume(vrepScene->getNawVolume());
+				}
 				grid = vrepScene->vol;
 				//renderer[k]->ResetCamera();
 			}
@@ -196,6 +206,41 @@ void stereoPanorama_renderwindow_support::syncData() {
 	vrepScene->transferVisionSensorData();
 }
 
+//vtkSmartPointer<vtkAlgorithmOutput> runFXAA(vtkSmartPointer<vtkImageData> im) {
+//	vtkSmartPointer<vtkOpenGLRenderer> render = vtkSmartPointer<vtkOpenGLRenderer>::New();
+//	vtkSmartPointer<vtkRenderWindow> renwin = vtkSmartPointer<vtkRenderWindow>::New();
+//	vtkSmartPointer<vtkOpenVRRenderWindowInteractor> renwinI = vtkSmartPointer<vtkOpenVRRenderWindowInteractor>::New();
+//
+//	vtkSmartPointer<vtkOpenGLTexture> tex = vtkSmartPointer<vtkOpenGLTexture>::New();
+//	vtkSmartPointer<vtkWindowToImageFilter> fi = vtkSmartPointer<vtkWindowToImageFilter>::New();
+//	tex->SetInputData(im);
+//	tex->Update();
+//	render->SetTexturedBackground(true);
+//	render->SetBackgroundTexture(tex);
+//	render->UseFXAAOn();
+//	renwin->AddRenderer(render);
+//	renwin->SetSize(im->GetDimensions()[0], im->GetDimensions()[1]);
+//	renwin->SetAlphaBitPlanes(1);
+//	//renwin->SetOffScreenRendering(true);
+//	
+//	renwinI->SetRenderWindow(renwin);
+//	fi->SetInput(renwin);
+//	fi->SetInputBufferTypeToRGBA();
+//	fi->ShouldRerenderOff();
+//	cout << "Did this" << endl;
+//	render->Render();
+//	cout << "Did this" << endl;
+//	fi->Modified();
+//	fi->ReadFrontBufferOff();
+//	fi->Update();
+//	render->Delete();
+//	renwin->Delete();
+//	renwinI->Delete();
+//	tex->Delete();
+//	return fi->GetOutputPort();
+//}
+
+
 
 void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, bool top, int k, int width, int height) {
 	vtkSmartPointer<vtkImageAppend> horizontal = vtkSmartPointer<vtkImageAppend>::New();
@@ -227,10 +272,7 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		prePose->Modified();
 		vr_camera[k]->SetModelTransformMatrix(prePose->GetMatrix());
 		vr_camera[k]->Modified();
-		
-		//vr_camera[k]->Modified();
 		renderer[k]->Render();
-		//vr_renderWindowInteractor[k]->Render();
 		filter[k]->Modified();
 		filter[k]->ReadFrontBufferOff();
 		filter[k]->Update();
@@ -275,8 +317,15 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 
 	// Search for dynamic path object
 	path = new pathObject(clientID);
-	for (int k = 0; k < 1; k++) {
-		renderer[k]->AddActor(path->getActor());
+	for (int k = 0; k < vr_camera.size(); k++) {
+		vtkSmartPointer<vtkActor> temp;
+		if (k == 0) {
+			temp = path->getActor();
+		}
+		else {
+			temp = path->getNewActor();
+		}
+		renderer[k]->AddActor(temp);
 		renderer[k]->Modified();
 	}
 	std::string fileName = ExePath();
@@ -284,6 +333,14 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 	//vrepScene->vol->toggleMode();
 	cout << "Temporary file save location : " << fileName << endl;
 	
+	// Define plot container
+	vrep_plot_container *pc = new vrep_plot_container(clientID, renderer);
+
+	if (core == 1) {
+		cout << "Multi core rendering activated" << endl;
+	}else{
+		cout << "Single core rendering activated" << endl;
+	}
 	while (true) {
 		for (int i = 0; i < 2; i++) {
 			if (vrepScene->startVisionSensorThread()) { // if vision sensor
@@ -291,6 +348,7 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 				coverage = vrepScene->updateVisionSensorRender();
 				syncData();
 			}
+			//checkBackground();
 			updatePose();
 			checkLayers();
 			path->update();
@@ -301,6 +359,10 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		if (trigger == 0) {
 			continue; 
 		}
+
+		// update plot container
+		pc->update();
+
 		vtkSmartPointer<vtkImageAppend> vertical = vtkSmartPointer<vtkImageAppend>::New();
 		vertical->SetAppendAxis(1);
 		cout << "Started rendering image" << endl;
@@ -327,8 +389,11 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		for (int i = 0; i < 4; i++) {
 			vertical->AddInputData(slice[i]); // top left
 		}
+		
 		vtkSmartPointer<vtkPNGWriter> wr = vtkSmartPointer<vtkPNGWriter>::New();
 		wr->SetFileName(fileName.c_str());
+		vertical->Update();
+		//wr->SetInputConnection(runFXAA(vertical->GetOutput()));
 		wr->SetInputConnection(vertical->GetOutputPort());
 		wr->Write();
 
@@ -370,24 +435,30 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 		renderer[k]->SetTwoSidedLighting(false);
 		renderer[k]->LightFollowCameraOff();
 		renderer[k]->AutomaticLightCreationOff();
-		//renderer[k]->UseDepthPeelingForVolumesOn();
-		//renderer[k]->SetMaximumNumberOfPeels(0);
-		//renderer[k]->SetUseDepthPeeling(true);
+		renderer[k]->UseDepthPeelingForVolumesOn();
+		renderer[k]->SetUseDepthPeeling(true);
+		renderer[k]->SetMaximumNumberOfPeels(20);
 		renderer[k]->Modified();
-		renderer[k]->SetBackground(data[0], data[1], data[2]);
-		renderer[k]->SetBackground2(data[3], data[4], data[5]);
-		renderer[k]->SetGradientBackground(true);
+		//renderer[k]->SetBackground(data[0], data[1], data[2]);
+		//renderer[k]->SetBackground2(data[3], data[4], data[5]);
+		//renderer[k]->SetGradientBackground(true);
+		//renderer[k]->SetBackground(1,1,1);
+		renderer[k]->SetBackgroundAlpha(0.0);  //-> re activate this
+		//renderer[k]->SetUseFXAA(true);
+		
 		renderWindow[k]->AddRenderer(renderer[k]);
 
 		renderWindow[k]->SetSize(121.0, height); // make shure we have a 'middle' pixel
 		renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
 		renderWindow[k]->SetDesiredUpdateRate(10000.0);
+		renderWindow[k]->SetAlphaBitPlanes(1); // -> re activate this
 		//renderWindow[k]->SetAlphaBitPlanes(true);
-		//renderWindow[k]->SetMultiSamples(0);
+		renderWindow[k]->SetMultiSamples(0);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
 		vr_renderWindowInteractor[k]->Initialize();
 		filter[k]->SetInput(renderWindow[k]);
+		filter[k]->SetInputBufferTypeToRGBA(); //-> re activate this
 		filter[k]->ShouldRerenderOff();
 	}
 }

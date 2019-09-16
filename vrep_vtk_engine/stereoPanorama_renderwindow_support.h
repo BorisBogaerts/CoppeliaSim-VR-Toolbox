@@ -73,7 +73,7 @@ public:
 	void dynamicAddObjects();
 
 	void syncData();
-
+	//void checkBackground();
 	timerClass *chrono = new timerClass;
 protected:
 	vrep_scene_content * vrepScene;
@@ -84,12 +84,15 @@ protected:
 	int refH;
 	int update = 10;
 	int useInteractor = true;
-	std::vector<vtkSmartPointer<vtkOpenGLRenderer>> renderer;
+	std::vector<vtkSmartPointer<vtkRenderer>> renderer;
 	std::vector<vtkSmartPointer<vtkWin32OpenGLRenderWindow>> renderWindow;
 	std::vector<vtkSmartPointer<vtkWin32RenderWindowInteractor>> vr_renderWindowInteractor;
 	std::vector<vtkSmartPointer<vtkOpenGLCamera>> vr_camera;
 	std::vector<vtkSmartPointer<vtkTransform>> pose;
 	std::vector<vtkSmartPointer<vtkImageData>> slice;
+
+	//vtkSmartPointer<vtkExtractVOI> backGroundSlicer = nullptr;
+	//vtkSmartPointer<vtkImageData> backGround = nullptr;
 
 	std::vector<vtkSmartPointer<vtkWindowToImageFilter>> filter;
 

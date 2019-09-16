@@ -34,6 +34,10 @@ The interface has the following capabilities:
 # VR 360 cam
 This tool renders omnidirectional stereo images for a V-REP vision sensor. You don't need any physical VR device to use this tool (only to view the result). The theory behind this rendering process is exelently explained here : https://developers.google.com/vr/jump/rendering-ods-content.pdf.
 
+Some videos produced with this tool:
+- https://youtu.be/7O629j58bTI
+- https://youtu.be/pFAptrCYhaQ
+
 To use this tool, import the VR360_cam.ttm model in your V-REP scene. Next launch VR360_cam.exe (maybe as administrator, a file is saved in the location of the .exe file, this action could require administrator privileges). 
 This process is demonstrated at the end of this video https://youtu.be/ozam2Ew7RdA.
 
@@ -86,5 +90,23 @@ Please cite this paper if the interface is used in a relevant context (camera pl
   pages={1003},
   year={2019},
   publisher={Multidisciplinary Digital Publishing Institute}
+}
+
+# Enabling Humans to Plan Inspection Paths Using a Virtual Reality Interface
+The interface also contains the implementation of the paper "Enabling Humans to Plan Inspection Paths Using a Virtual Reality Interface" available at https://arxiv.org/abs/1909.06077
+
+The usage is the same as in the demo scene: Hello_camera_coverage.ttt. To visualize the quality on a mesh, just make the mesh a child of the Field model.
+
+Additional signals:
+- To reset a measurement state: sim.setIntegerSignal("ResetMeasurement", 1)
+- To record a path: sim.setIntegerSignal("MeasurementInProgress", 1)
+
+Please cite this paper if the interface is used in a relevant context (Robotic inspection planning)
+
+@article{bogaerts2019enabling,
+  title={Enabling Humans to Plan Inspection Paths Using a Virtual Reality Interface},
+  author={Bogaerts, Boris and Sels, Seppe and Vanlanduit, Steve and Penne, Rudi},
+  journal={arXiv preprint arXiv:1909.06077},
+  year={2019}
 }
 

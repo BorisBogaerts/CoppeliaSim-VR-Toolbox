@@ -77,6 +77,7 @@ public:
 	int getNumActors();
 	int getNumRenders() { return camsContainer.size(); };
 	vtkSmartPointer<vtkVolume> getVolume() { return volume; };
+	vtkSmartPointer<vtkVolume> getNawVolume() { return vol->getNewVolume(); }
 	vtkSmartPointer<vtkActor> getPanelActor(int i) { return camsContainer[i].getActor(); };
 	vtkSmartPointer<vtkActor> getNewPanelActor(int i) { return camsContainer[i].getNewactor(); };
 	vtkSmartPointer<vtkLight> getLight(int i) { return lights[i].getLight(); };

@@ -50,6 +50,7 @@ public:
 	bool loadGrid();
 	void updatMap();
 	vtkSmartPointer<vtkVolume> getVolume();
+	vtkSmartPointer<vtkVolume> getNewVolume();
 	bool updatePosition(vtkSmartPointer<vtkFloatArray> values);
 	bool updateGrid();
 	vtkSmartPointer<vtkImageData> getGrid() { return grid; };

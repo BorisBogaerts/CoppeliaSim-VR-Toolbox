@@ -45,6 +45,7 @@ public:
 	~pathObject();
 	void update();
 	vtkSmartPointer<vtkActor> getActor();
+	vtkSmartPointer<vtkActor> getNewActor();
 protected:
 	int clientID;
 	bool exist = false;

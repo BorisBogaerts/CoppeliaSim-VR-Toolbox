@@ -71,10 +71,10 @@ bool vrep_volume_grid::updatePosition(vtkSmartPointer<vtkFloatArray> values) {
 		pose->RotateX(-90);
 		pose->Modified();
 	}
-	//scalar->ShallowCopy(values);
+	scalar->ShallowCopy(values);
 	//scalar->DeepCopy(values);
 	//scalar = values;
-	scalar->Modified();
+	//scalar->Modified();
 	return false;
 }
 
@@ -170,7 +170,7 @@ void vrep_volume_grid::setColorMap(int mode) {
 		colorTransferFunction->AddRGBPoint(1.0, 0.8, 0, 0);*/
 	}
 	else {
-		opacityTransferFunction->AddPoint(0.0, 0.995);
+		opacityTransferFunction->AddPoint(0.0, 0.7);
 		opacityTransferFunction->AddPoint(0.125, 0);
 		opacityTransferFunction->AddPoint(0.25, 0);
 		colorTransferFunction->AddRGBPoint(0.0, 1.0, 0.0, 0.0);
@@ -212,6 +212,25 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 
 	volume->PickableOff();
 	return volume;
+}
+
+vtkSmartPointer<vtkVolume> vrep_volume_grid::getNewVolume() {
+	vtkSmartPointer<vtkVolume> newVolume = vtkSmartPointer<vtkVolume>::New();
+	vtkSmartPointer<vtkImageData> newGrid = vtkSmartPointer<vtkImageData>::New();
+	vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> newMapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+	newGrid->ShallowCopy(grid);
+	newMapper->SetInputData(grid);
+	newMapper->AutoAdjustSampleDistancesOff();
+	newMapper->SetScalarModeToUsePointData();
+	newMapper->SelectScalarArray("scalars");
+	newMapper->SetLockSampleDistanceToInputSpacing(true);
+	newMapper->UseJitteringOn();
+	newMapper->SetBlendModeToComposite();
+	newVolume->SetMapper(newMapper);
+	newVolume->SetProperty(volume->GetProperty());
+	newVolume->SetUserTransform(pose);
+	newVolume->PickableOff();
+	return newVolume;
 }
 
 vtkSmartPointer<vtkLookupTable> vrep_volume_grid::getLUT(int numValues) {

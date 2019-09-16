@@ -145,10 +145,6 @@
     <ResourceCompile Include="V-REP VR Interface.rc" />
     <ResourceCompile Include="V-REP VR Interface2.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\geen_titel_1_OHv_icon.ico" />
-    <Image Include="C:\Users\Boris\Downloads\geen_titel_1_OHv_icon.ico" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

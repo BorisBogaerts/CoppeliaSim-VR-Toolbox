@@ -168,7 +168,7 @@ vtkSmartPointer<vtkActor> vrep_mesh_object::getNewActor() {
 	vtkSmartPointer<vtkPolyData> PD = vtkSmartPointer<vtkPolyData>::New();
 	newPM->SetLookupTable(vrep_polyData_mapper->GetLookupTable());
 	PD->DeepCopy(meshData);
-	//PD->GetPointData()->SetScalars(meshData->GetPointData()->GetScalars()); // if visibility computation
+	PD->GetPointData()->SetScalars(meshData->GetPointData()->GetScalars()); // if visibility computation
 	newPM->SetInputData(PD);
 	newActor->SetMapper(newPM);
 	if (texturedObject) {

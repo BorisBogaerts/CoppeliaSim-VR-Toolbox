@@ -50,6 +50,8 @@
 #include <vtkOBJImporter.h>
 #include <vtkActorCollection.h>
 #include <vtkPolyDataMapper.h>
+
+#include "vrep_plot_container.h"
 // Sorry this is purely vtk's fault, stupid function handles etc
 class miniClass {
 public:
@@ -480,6 +482,9 @@ void vr_renderwindow_support::activate_interactor() {
 	}else{
 		camThread.~thread();
 	}
+
+	// Define plot container
+	vrep_plot_container *pc = new vrep_plot_container(clientID, renderer);
 	
 	// Start the render loop
 	while (true) {
@@ -497,6 +502,10 @@ void vr_renderwindow_support::activate_interactor() {
 		updateText(); // change framerate text
 		path->update();
 		checkLayers();
+
+		// update plot container
+		pc->update();
+
 		if (isReady()) {
 			syncData(); // transfer information of vision sensor in differend thread to this thread
 			//grid->updatMap();

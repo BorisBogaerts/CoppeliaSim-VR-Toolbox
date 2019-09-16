@@ -42,6 +42,7 @@
 #include <thread>
 #include <chrono>
 #include <ppl.h>
+#include "vrep_plot_container.h"
 
 void handleFunc(renderwindow_support *sup) {
 	cout << "Vision sensor thread activated" << endl;
@@ -181,7 +182,8 @@ void renderwindow_support::activate_interactor() {
 	renderer->AddActor(path->getActor());
 	renderer->Modified();
 
-
+	// Create plot container
+	vrep_plot_container *cont = new vrep_plot_container(clientID, renderer);
 
 	// Manage vision sensor thread (if necessary)
 	std::thread camThread;
@@ -197,6 +199,10 @@ void renderwindow_support::activate_interactor() {
 		chrono->increment();
 		
 		path->update();
+
+		// add plot content
+		cont->update();
+
 		if (isReady()) {
 			syncData();
 			//grid->updatMap();

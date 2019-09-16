@@ -142,6 +142,7 @@
     <ClCompile Include="vrep_light.cpp" />
     <ClCompile Include="vrep_mesh_object.cpp" />
     <ClCompile Include="vrep_mesh_reader.cpp" />
+    <ClCompile Include="vrep_plot_container.cpp" />
     <ClCompile Include="vrep_scene_content.cpp" />
     <ClCompile Include="vrep_vision_sensor.cpp" />
     <ClCompile Include="vrep_volume_grid.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="vrep_light.h" />
     <ClInclude Include="vrep_mesh_object.h" />
     <ClInclude Include="vrep_mesh_reader.h" />
+    <ClInclude Include="vrep_plot_container.h" />
     <ClInclude Include="vrep_scene_content.h" />
     <ClInclude Include="vrep_vision_sensor.h" />
     <ClInclude Include="vrep_volume_grid.h" />

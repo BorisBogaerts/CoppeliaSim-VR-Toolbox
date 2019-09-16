@@ -79,6 +79,20 @@ vtkSmartPointer<vtkActor> pathObject::getActor() {
 	return lineActor;
 }
 
+vtkSmartPointer<vtkActor> pathObject::getNewActor() {
+	vtkSmartPointer<vtkActor> newActor = vtkSmartPointer<vtkActor>::New();
+	vtkSmartPointer<vtkPolyData> newLineData = vtkSmartPointer<vtkPolyData>::New();
+	vtkSmartPointer<vtkPolyDataMapper> newLineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	newLineData->ShallowCopy(polyData);
+	newLineMapper->SetInputData(newLineData);
+	newActor->SetMapper(newLineMapper);
+	newActor->SetUserTransform(pose);
+	newActor->GetProperty()->SetColor(0.7, 0.14, 0.56);
+	newActor->GetProperty()->SetLineWidth(5.0);
+	newActor->PickableOff();
+	return newActor;
+}
+
 void pathObject::update() {
 	if (exist) {
 		simxInt succes;
