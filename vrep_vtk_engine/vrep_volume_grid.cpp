@@ -53,8 +53,8 @@ vrep_volume_grid::~vrep_volume_grid()
 
 bool vrep_volume_grid::updatePosition(vtkSmartPointer<vtkFloatArray> values) {
 	if (alternativeHandle == -1) {
-		bool update = this->updateGrid();
-		if (update) { return true; };
+		//bool update = this->updateGrid();
+		//if (update) { return true; };
 		simxFloat eulerAngles[3];
 		simxFloat position[3];
 		simxGetObjectOrientation(clientID, objectHandle, refHandle, eulerAngles, simx_opmode_streaming); // later replace by : simx_opmode_buffer 
@@ -72,14 +72,17 @@ bool vrep_volume_grid::updatePosition(vtkSmartPointer<vtkFloatArray> values) {
 		pose->Modified();
 	}
 	scalar->ShallowCopy(values);
-	//scalar->DeepCopy(values);
+	for (int i = 0; i < scalarBuffer.size(); i++) {
+		scalarBuffer[i]->ShallowCopy(values);
+		scalarBuffer[i]->Modified();
+	}
 	//scalar = values;
-	//scalar->Modified();
+	scalar->Modified();
 	return false;
 }
 
-bool vrep_volume_grid::updateGrid() {
-	simxFloat *data;
+bool vrep_volume_grid::updateGrid(int k) {
+	/*simxFloat *data;
 	simxInt dataLength;
 	simxCallScriptFunction(clientID, (simxChar*)"Field", sim_scripttype_childscript, (simxChar*)"getUpdate"
 		, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, &dataLength, &data, NULL, NULL, NULL, NULL, simx_opmode_blocking);
@@ -87,8 +90,23 @@ bool vrep_volume_grid::updateGrid() {
 		this->loadGrid();
 		grid->Modified();
 		return true;
+	}*/
+	//if (k == 0) {
+	//	volume->Update();
+	//}
+	//else {
+	//	if (volumeBuffer.size() > 0) {
+	//		volumeBuffer[k - 1]->Update();
+	//	}
+	//}
+	if (k == 0) {
+		volume->Update();
 	}
-	return false;
+	else {
+		volumeBuffer[k - 1]->Update();
+	}
+	
+	return false; 
 }
 
 bool vrep_volume_grid::loadGrid() {
@@ -113,6 +131,8 @@ bool vrep_volume_grid::loadGrid() {
 	vertices->SetDataTypeToFloat();
 	scalar->SetNumberOfComponents(1);
 	scalar->SetNumberOfValues(grid->GetNumberOfPoints());
+
+	cout << "Volume : " << scalar->GetNumberOfValues() << endl;
 
 	vertices->SetNumberOfPoints(grid->GetNumberOfPoints());
 	for (int i = 1; i < grid->GetNumberOfPoints(); i++) {
@@ -170,7 +190,7 @@ void vrep_volume_grid::setColorMap(int mode) {
 		colorTransferFunction->AddRGBPoint(1.0, 0.8, 0, 0);*/
 	}
 	else {
-		opacityTransferFunction->AddPoint(0.0, 0.7);
+		opacityTransferFunction->AddPoint(0.0, 0.4);
 		opacityTransferFunction->AddPoint(0.125, 0);
 		opacityTransferFunction->AddPoint(0.25, 0);
 		colorTransferFunction->AddRGBPoint(0.0, 1.0, 0.0, 0.0);
@@ -199,13 +219,12 @@ void vrep_volume_grid::toggleMode() {
 vtkSmartPointer<vtkVolume> vrep_volume_grid::getVolume() {
 	mapper->SetInputData(grid);
 	mapper->AutoAdjustSampleDistancesOff();
+	mapper->LockSampleDistanceToInputSpacingOn();
 	mapper->SetScalarModeToUsePointData();
 	mapper->SelectScalarArray("scalars");
-	//mapper->SetRequestedRenderModeToRayCast();
-	//mapper->SetRequestedRenderModeToGPU();
 	volume->SetMapper(mapper);
-	mapper->SetLockSampleDistanceToInputSpacing(true);
-	mapper->UseJitteringOn();
+	
+	//mapper->UseJitteringOn();
 	mapper->SetBlendModeToComposite();
 	setColorMap(2);
 	volume->SetUserTransform(pose);
@@ -218,18 +237,33 @@ vtkSmartPointer<vtkVolume> vrep_volume_grid::getNewVolume() {
 	vtkSmartPointer<vtkVolume> newVolume = vtkSmartPointer<vtkVolume>::New();
 	vtkSmartPointer<vtkImageData> newGrid = vtkSmartPointer<vtkImageData>::New();
 	vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> newMapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
-	newGrid->ShallowCopy(grid);
+	//vtkSmartPointer<vtkFixedPointVolumeRayCastMapper> newMapper = vtkSmartPointer<vtkFixedPointVolumeRayCastMapper>::New();
+	vtkSmartPointer<vtkFloatArray> newScalar = vtkSmartPointer<vtkFloatArray>::New();
+
+	newScalar->DeepCopy(scalar);
+	scalarBuffer.push_back(newScalar);
+	newGrid->DeepCopy(grid);
+	newGrid->SetOrigin(grid->GetOrigin());
+	newGrid->SetSpacing(grid->GetSpacing());
+	newGrid->SetDimensions(grid->GetDimensions());
+	newGrid->GetPointData()->SetScalars(newScalar);
+	newGrid->GetPointData()->SetActiveScalars("scalars");
+
 	newMapper->SetInputData(grid);
 	newMapper->AutoAdjustSampleDistancesOff();
+	newMapper->LockSampleDistanceToInputSpacingOn();
 	newMapper->SetScalarModeToUsePointData();
 	newMapper->SelectScalarArray("scalars");
-	newMapper->SetLockSampleDistanceToInputSpacing(true);
-	newMapper->UseJitteringOn();
-	newMapper->SetBlendModeToComposite();
+	//newMapper->UseJitteringOn();
 	newVolume->SetMapper(newMapper);
+	
+	//newMapper->UseJitteringOn();
+	newMapper->SetBlendModeToComposite();
+
 	newVolume->SetProperty(volume->GetProperty());
 	newVolume->SetUserTransform(pose);
 	newVolume->PickableOff();
+	volumeBuffer.push_back(newVolume);
 	return newVolume;
 }
 

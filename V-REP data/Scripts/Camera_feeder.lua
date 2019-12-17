@@ -1,4 +1,4 @@
--- Copyright (c) 2018, Boris Bogaerts
+-- Copyright (c) 2020, Boris Bogaerts
 -- All rights reserved.
 
 -- Redistribution and use in source and binary forms, with or without 

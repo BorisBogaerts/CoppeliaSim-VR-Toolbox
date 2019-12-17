@@ -37,6 +37,7 @@
 #include <vtkPointSet.h>
 #include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
+//#include <vtkFixedPointVolumeRayCastMapper.h>
 #include <vtkFloatArray.h>
 #include <vtkTransform.h>
 #include <vtkLookupTable.h>
@@ -52,7 +53,7 @@ public:
 	vtkSmartPointer<vtkVolume> getVolume();
 	vtkSmartPointer<vtkVolume> getNewVolume();
 	bool updatePosition(vtkSmartPointer<vtkFloatArray> values);
-	bool updateGrid();
+	bool updateGrid(int k);
 	vtkSmartPointer<vtkImageData> getGrid() { return grid; };
 	vtkSmartPointer<vtkPoints> getPoints() { return vertices; };
 	vtkSmartPointer<vtkTransform> getTransform() { return pose; ; }
@@ -73,8 +74,14 @@ protected:
 	vtkSmartPointer<vtkPoints> vertices = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
 	vtkSmartPointer<vtkVolume> volume = vtkSmartPointer<vtkVolume>::New();
+	std::vector<vtkSmartPointer<vtkVolume>> volumeBuffer;
+
 	vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+	//vtkSmartPointer<vtkFixedPointVolumeRayCastMapper> mapper = vtkSmartPointer<vtkFixedPointVolumeRayCastMapper>::New();
+
 	vtkSmartPointer<vtkFloatArray> scalar = vtkSmartPointer<vtkFloatArray>::New();
+	std::vector<vtkSmartPointer<vtkFloatArray>> scalarBuffer;
+
 	vtkSmartPointer<vtkLookupTable> LUT = vtkSmartPointer<vtkLookupTable>::New();
 };
 

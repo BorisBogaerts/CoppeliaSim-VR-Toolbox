@@ -247,6 +247,7 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 	vtkSmartPointer<vtkExtractVOI> extractVOI;
 	vtkSmartPointer<vtkTransform> prePose = vtkSmartPointer<vtkTransform>::New();
 	int temp = 1;
+	int borderWidth = 0;
 	width = width / temp;
 	dist = dist / 2;
 	if (left) {
@@ -272,12 +273,15 @@ void stereoPanorama_renderwindow_support::renderStrip(float dist, bool left, boo
 		prePose->Modified();
 		vr_camera[k]->SetModelTransformMatrix(prePose->GetMatrix());
 		vr_camera[k]->Modified();
+		//grid->updateGrid(k);
 		renderer[k]->Render();
+		//renderWindow[k]->Render();
+		//vr_renderWindowInteractor[k]->Render();
 		filter[k]->Modified();
 		filter[k]->ReadFrontBufferOff();
 		filter[k]->Update();
 		extractVOI->SetInputConnection(filter[k]->GetOutputPort());
-		extractVOI->SetVOI(60, 60, 0, height, 0, 0);
+		extractVOI->SetVOI(60- borderWidth, 60+ borderWidth, 0, height, 0, 0);
 		extractVOI->Update();
 		locked = false;
 		horizontal->AddInputData(extractVOI->GetOutput());
@@ -328,8 +332,8 @@ void stereoPanorama_renderwindow_support::activate_interactor() {
 		renderer[k]->AddActor(temp);
 		renderer[k]->Modified();
 	}
-	std::string fileName = ExePath();
-	fileName.append("\\imageTransfer.png");
+	std::string fileName = getenv("TEMP");//xePath();
+	fileName.append("\\CoppeliaSimVR\\imageTransfer.png");
 	//vrepScene->vol->toggleMode();
 	cout << "Temporary file save location : " << fileName << endl;
 	
@@ -442,19 +446,19 @@ void stereoPanorama_renderwindow_support::activateMainCam(int height) {
 		//renderer[k]->SetBackground(data[0], data[1], data[2]);
 		//renderer[k]->SetBackground2(data[3], data[4], data[5]);
 		//renderer[k]->SetGradientBackground(true);
-		//renderer[k]->SetBackground(1,1,1);
+		renderer[k]->SetBackground(1,1,1);
 		renderer[k]->SetBackgroundAlpha(0.0);  //-> re activate this
 		//renderer[k]->SetUseFXAA(true);
 		
 		renderWindow[k]->AddRenderer(renderer[k]);
 
-		renderWindow[k]->SetSize(121.0, height); // make shure we have a 'middle' pixel
+		renderWindow[k]->SetSize(121, height); // make shure we have a 'middle' pixel
 		renderWindow[k]->SetOffScreenRendering(true);
 		renderWindow[k]->Initialize();
 		renderWindow[k]->SetDesiredUpdateRate(10000.0);
 		renderWindow[k]->SetAlphaBitPlanes(1); // -> re activate this
 		//renderWindow[k]->SetAlphaBitPlanes(true);
-		renderWindow[k]->SetMultiSamples(0);
+		renderWindow[k]->SetMultiSamples(1);
 		vr_renderWindowInteractor[k]->SetRenderWindow(renderWindow[k]);
 		vr_renderWindowInteractor[k]->Initialize();
 		filter[k]->SetInput(renderWindow[k]);

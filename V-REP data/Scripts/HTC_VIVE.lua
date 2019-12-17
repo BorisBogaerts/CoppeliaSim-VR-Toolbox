@@ -1,4 +1,4 @@
--- Copyright (c) 2018, Boris Bogaerts
+-- Copyright (c) 2020, Boris Bogaerts
 -- All rights reserved.
 
 -- Redistribution and use in source and binary forms, with or without 
@@ -135,8 +135,10 @@ end
 
 getTextureInformation = function(inInts,inFloats,inStrings,inBuffer)
     a=sim.getShapeViz(inInts[1],0)
-    sim.saveImage(a.texture.texture,a.texture.resolution,1,"textureTransfer.png",100)
-    return {}, a.texture.coordinates, {sim.getStringParameter(sim.stringparam_application_path) .."/textureTransfer.png"}, ''
+    tempName = os.getenv("TEMP") 
+	os.execute("mkdir " .. tempName.."\\CoppeliaSimVR")
+	sim.saveImage(a.texture.texture,a.texture.resolution,1,tempName.."\\CoppeliaSimVR\\textureTransfer.png",100)
+	return {}, a.texture.coordinates, {tempName.."\\CoppeliaSimVR\\textureTransfer.png"}, ''
 end
 
 helloCams = function(inInts, inFloats, inStrings,inBuffer)
